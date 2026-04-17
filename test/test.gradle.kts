@@ -1,4 +1,4 @@
-version = "0.1.0"
+version = "0.1.1"
 
 project.extra["PluginName"]        = "Test"
 project.extra["PluginDescription"] = "Scratch plugin for testing VitalAPI methods"
