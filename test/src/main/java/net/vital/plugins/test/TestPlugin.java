@@ -21,11 +21,13 @@ public class TestPlugin extends Plugin
 	private static final int STYLE_AGGRESSIVE = 2;
 
 	private boolean switched;
+	private boolean verifyNextTick;
 
 	@Override
 	protected void startUp()
 	{
 		switched = false;
+		verifyNextTick = false;
 		log.info("Test plugin started");
 	}
 
@@ -38,7 +40,20 @@ public class TestPlugin extends Plugin
 	@Subscribe
 	public void onGameTick(GameTick event)
 	{
-		if (switched || !Game.isLoggedIn())
+		if (!Game.isLoggedIn())
+		{
+			return;
+		}
+
+		if (verifyNextTick)
+		{
+			int after = Combat.getCombatStyle();
+			log.info("Post-switch varp={} (1-based={})", after, after + 1);
+			verifyNextTick = false;
+			return;
+		}
+
+		if (switched)
 		{
 			return;
 		}
@@ -54,7 +69,8 @@ public class TestPlugin extends Plugin
 		}
 
 		boolean ok = Combat.selectCombatStyle(STYLE_AGGRESSIVE);
-		log.info("selectCombatStyle(Aggressive) returned {}, new varp={}", ok, Combat.getCombatStyle());
+		log.info("selectCombatStyle(Aggressive) returned {} (varp read immediately may be stale)", ok);
 		switched = true;
+		verifyNextTick = true;
 	}
 }
