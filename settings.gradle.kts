@@ -5,7 +5,8 @@ enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 include(
 	"walker",
 	"autologin",
-	"cow-killer"
+	"cow-killer",
+	"test"
 )
 
 for (project in rootProject.children) {
