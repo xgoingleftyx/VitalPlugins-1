@@ -64,4 +64,59 @@ subprojects {
 			fileMode = 420
 		}
 	}
+
+	afterEvaluate {
+		tasks.withType<Jar> {
+			doLast {
+				val pluginsDir = file("${System.getProperty("user.home")}/.vitalclient/sideloaded-plugins")
+				pluginsDir.mkdirs()
+				val baseName = archiveBaseName.get()
+				pluginsDir.listFiles()?.filter {
+					it.name.startsWith("$baseName-") && it.name.endsWith(".jar") && it.name != archiveFileName.get()
+				}?.forEach { old ->
+					old.delete()
+					println("Removed old jar: ${old.name}")
+				}
+				val dest = pluginsDir.resolve(archiveFileName.get())
+				archiveFile.get().asFile.copyTo(dest, overwrite = true)
+				println("Deployed ${archiveFileName.get()} to ${pluginsDir.absolutePath}")
+			}
+		}
+
+		tasks.register("publish") {
+			doLast {
+				val buildFile = file("${project.name}.gradle.kts")
+				if (!buildFile.exists()) error("No ${buildFile.name} in ${project.projectDir}")
+				val content = buildFile.readText()
+				val versionRegex = Regex("""version\s*=\s*"(\d+)\.(\d+)\.(\d+)"""")
+				val match = versionRegex.find(content) ?: error("No version found in ${buildFile.path}")
+				val major = match.groupValues[1].toInt()
+				val minor = match.groupValues[2].toInt()
+				val patch = match.groupValues[3].toInt()
+				val newVersion = "$major.$minor.${patch + 1}"
+				buildFile.writeText(content.replace(match.value, "version = \"$newVersion\""))
+
+				exec {
+					workingDir = rootProject.projectDir
+					commandLine("${rootProject.projectDir}/gradlew.bat", ":${project.name}:jar")
+				}
+
+				val commitMsg = "${project.name} v$newVersion - ${project.property("commitMessage")}"
+				exec {
+					workingDir = rootProject.projectDir
+					commandLine("git", "add", "-A", project.projectDir.absolutePath)
+				}
+				exec {
+					workingDir = rootProject.projectDir
+					commandLine("git", "commit", "-m", commitMsg)
+				}
+				exec {
+					workingDir = rootProject.projectDir
+					commandLine("git", "push", "upstream", "main")
+				}
+
+				println("Published ${project.name} v$newVersion")
+			}
+		}
+	}
 }
