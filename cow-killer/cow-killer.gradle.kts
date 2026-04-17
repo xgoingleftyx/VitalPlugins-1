@@ -1,4 +1,4 @@
-version = "0.1.1"
+version = "0.1.2"
 
 project.extra["PluginName"]        = "Cow Killer"
 project.extra["PluginDescription"] = "Kills cows in Lumbridge pen with style rotation (combat trainer)"

@@ -55,11 +55,17 @@ public class CowKillerPlugin extends Plugin
 	private static final int SKILL_DEFENCE = 1;
 	private static final int SKILL_STRENGTH = 2;
 
-	// ── Combat style indices for selectCombatStyle (typical melee weapon) ──
-	// 0 = Accurate (Attack xp), 1 = Aggressive (Strength), 2 = Defensive (Defence)
-	private static final int STYLE_ATTACK = 0;
-	private static final int STYLE_STRENGTH = 1;
-	private static final int STYLE_DEFENCE = 2;
+	// ── Combat style slots for selectCombatStyle (1-based; see Combat.hpp) ──
+	// Per VitalClient: "1-based: 1-4, or 5 for special weapons. Maps to varp
+	// COM_MODE values 0-3." For standard bladed weapons (e.g. bronze sword):
+	//   1 = Accurate  → Attack XP
+	//   2 = Aggressive → Strength XP
+	//   3 = Controlled → shared (skipped)
+	//   4 = Defensive → Defence XP
+	// combatGetStyle() returns the varp value (0-3), so it's select-1.
+	private static final int STYLE_ATTACK = 1;
+	private static final int STYLE_STRENGTH = 2;
+	private static final int STYLE_DEFENCE = 4;
 
 	// ── Pathing ──
 	private static final int STRIDE = 4;                  // x,y,plane,transport per tile in pathfinder output
@@ -82,10 +88,15 @@ public class CowKillerPlugin extends Plugin
 	private State state = State.WALK_TO_COWS;
 	private int cooldownTicks;
 
+	// Plugin-local tick counter — Game.getTickCount() is the engine's running
+	// counter and may already be huge on plugin start, so we count ticks
+	// ourselves for stable elapsed-time math.
+	private int tickCounter;
+
 	// Per-stat random stop levels (rolled at startup)
 	private int stopLevelAtk, stopLevelStr, stopLevelDef;
 
-	// Style rotation timer
+	// Style rotation timer (in local ticks)
 	private int lastStyleSwitchTick;
 	private int nextSwitchInterval;
 
@@ -111,6 +122,7 @@ public class CowKillerPlugin extends Plugin
 		stopLevelStr = rollStop(min, max);
 		stopLevelDef = rollStop(min, max);
 		rollStyleInterval();
+		tickCounter = 0;
 		lastStyleSwitchTick = 0;
 		state = State.WALK_TO_COWS;
 		resetPath();
@@ -132,6 +144,8 @@ public class CowKillerPlugin extends Plugin
 		{
 			return;
 		}
+
+		tickCounter++;
 
 		if (cooldownTicks > 0)
 		{
@@ -220,13 +234,14 @@ public class CowKillerPlugin extends Plugin
 			return;
 		}
 		int style = pickTrainableStyle();
-		if (style >= 0 && Combat.getCombatStyle() != style)
+		if (style > 0 && currentStyleIndex() != style)
 		{
 			Combat.selectCombatStyle(style);
-			log.info("Set combat style to {}", styleName(style));
+			log.info("Set combat style to {} (select={}, current varp={})",
+				styleName(style), style, Combat.getCombatStyle());
 			cooldownTicks = 1;
 		}
-		lastStyleSwitchTick = Game.getTickCount();
+		lastStyleSwitchTick = tickCounter;
 		rollStyleInterval();
 		state = State.FIGHTING;
 	}
@@ -241,7 +256,7 @@ public class CowKillerPlugin extends Plugin
 		}
 
 		// Rotation timer expired
-		if (Game.getTickCount() - lastStyleSwitchTick > nextSwitchInterval)
+		if (tickCounter - lastStyleSwitchTick > nextSwitchInterval)
 		{
 			log.info("Style rotation timer expired, switching");
 			state = State.SET_STYLE;
@@ -370,9 +385,15 @@ public class CowKillerPlugin extends Plugin
 			&& Game.getBaseLevel(SKILL_DEFENCE) >= min;
 	}
 
+	/** 1-based combat style slot (matches selectCombatStyle input). */
+	private int currentStyleIndex()
+	{
+		return Combat.getCombatStyle() + 1;
+	}
+
 	private boolean currentStyleCapped()
 	{
-		switch (Combat.getCombatStyle())
+		switch (currentStyleIndex())
 		{
 			case STYLE_ATTACK:   return Game.getBaseLevel(SKILL_ATTACK)   >= stopLevelAtk;
 			case STYLE_STRENGTH: return Game.getBaseLevel(SKILL_STRENGTH) >= stopLevelStr;
@@ -388,7 +409,7 @@ public class CowKillerPlugin extends Plugin
 		if (Game.getBaseLevel(SKILL_ATTACK)   < stopLevelAtk) candidates[n++] = STYLE_ATTACK;
 		if (Game.getBaseLevel(SKILL_STRENGTH) < stopLevelStr) candidates[n++] = STYLE_STRENGTH;
 		if (Game.getBaseLevel(SKILL_DEFENCE)  < stopLevelDef) candidates[n++] = STYLE_DEFENCE;
-		return n == 0 ? -1 : candidates[rng.nextInt(n)];
+		return n == 0 ? 0 : candidates[rng.nextInt(n)];
 	}
 
 	private String styleName(int s)
