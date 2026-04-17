@@ -150,6 +150,14 @@ public class CowKillerPlugin extends Plugin
 			return;
 		}
 
+		// playerGetTileX/Y return SCENE coords; convert to real world coords for comparisons.
+		int[] worldPos = Tiles.sceneToWorld(local.getTileX(), local.getTileY());
+		if (worldPos == null)
+		{
+			return;
+		}
+		int wx = worldPos[0], wy = worldPos[1];
+
 		// Emergency flee — highest priority
 		if (state != State.FLEEING && state != State.HEALING && Game.getHP() <= config.fleeHp())
 		{
@@ -161,16 +169,16 @@ public class CowKillerPlugin extends Plugin
 		switch (state)
 		{
 			case WALK_TO_COWS:
-				walkToCows(local, localIdx);
+				walkToCows(localIdx, wx, wy);
 				break;
 			case SET_STYLE:
 				setStyle();
 				break;
 			case FIGHTING:
-				fight(local, localIdx);
+				fight(localIdx, wx, wy);
 				break;
 			case FLEEING:
-				flee(local, localIdx);
+				flee(localIdx, wx, wy);
 				break;
 			case HEALING:
 				heal();
@@ -182,10 +190,8 @@ public class CowKillerPlugin extends Plugin
 
 	// ── State handlers ──────────────────────────────────────────────────
 
-	private void walkToCows(Player local, int localIdx)
+	private void walkToCows(int localIdx, int wx, int wy)
 	{
-		int wx = local.getTileX();
-		int wy = local.getTileY();
 		if (inCowPen(wx, wy))
 		{
 			log.info("Arrived at cow pen");
@@ -225,11 +231,8 @@ public class CowKillerPlugin extends Plugin
 		state = State.FIGHTING;
 	}
 
-	private void fight(Player local, int localIdx)
+	private void fight(int localIdx, int wx, int wy)
 	{
-		int wx = local.getTileX();
-		int wy = local.getTileY();
-
 		// Goals met
 		if (allGoalsMet())
 		{
@@ -313,10 +316,8 @@ public class CowKillerPlugin extends Plugin
 		}
 	}
 
-	private void flee(Player local, int localIdx)
+	private void flee(int localIdx, int wx, int wy)
 	{
-		int wx = local.getTileX();
-		int wy = local.getTileY();
 		int dx = wx - SAFE_TILE_X;
 		int dy = wy - SAFE_TILE_Y;
 		if (dx * dx + dy * dy < 25)
@@ -454,12 +455,14 @@ public class CowKillerPlugin extends Plugin
 			{
 				continue;
 			}
-			if (!inCowPen(it.tileX, it.tileY))
+			// TileItem.tileX/Y are scene coords — convert to world for bounds check.
+			int[] iw = Tiles.sceneToWorld(it.tileX, it.tileY);
+			if (iw == null || !inCowPen(iw[0], iw[1]))
 			{
 				continue;
 			}
-			int dx = it.tileX - wx;
-			int dy = it.tileY - wy;
+			int dx = iw[0] - wx;
+			int dy = iw[1] - wy;
 			int d = dx * dx + dy * dy;
 			if (d < bestDist)
 			{
@@ -488,9 +491,9 @@ public class CowKillerPlugin extends Plugin
 			{
 				continue;
 			}
-			int nx = n.getTileX();
-			int ny = n.getTileY();
-			if (!inCowPen(nx, ny))
+			// npcGetTileX/Y are scene coords — convert to world for bounds check.
+			int[] nw = Tiles.sceneToWorld(n.getTileX(), n.getTileY());
+			if (nw == null || !inCowPen(nw[0], nw[1]))
 			{
 				continue;
 			}
@@ -503,8 +506,8 @@ public class CowKillerPlugin extends Plugin
 			{
 				continue;
 			}
-			int dx = nx - wx;
-			int dy = ny - wy;
+			int dx = nw[0] - wx;
+			int dy = nw[1] - wy;
 			int d = dx * dx + dy * dy;
 			if (d < bestDist)
 			{
