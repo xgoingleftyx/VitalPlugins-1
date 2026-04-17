@@ -112,7 +112,7 @@ subprojects {
 				}
 				exec {
 					workingDir = rootProject.projectDir
-					commandLine("git", "push", "upstream", "main")
+					commandLine("git", "push", "origin", "main")
 				}
 
 				println("Published ${project.name} v$newVersion")
