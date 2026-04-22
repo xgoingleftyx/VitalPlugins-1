@@ -4,6 +4,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -14,7 +15,7 @@ import java.util.UUID
 class EventBusTest {
 
 	@Test
-	fun `emitted events are received by subscribers`() = runTest {
+	fun `emitted events are received by subscribers`() = runTest(UnconfinedTestDispatcher()) {
 		val bus = EventBus()
 		val sessionId = UUID.randomUUID()
 		val event = TestPing(sessionId = sessionId, payload = "hello")
@@ -32,7 +33,7 @@ class EventBusTest {
 	}
 
 	@Test
-	fun `bus has replay buffer zero — late subscribers do not see past events`() = runTest {
+	fun `bus has replay buffer zero — late subscribers do not see past events`() = runTest(UnconfinedTestDispatcher()) {
 		val bus = EventBus()
 		val sessionId = UUID.randomUUID()
 
@@ -51,7 +52,7 @@ class EventBusTest {
 	}
 
 	@Test
-	fun `multiple subscribers all receive the same event`() = runTest {
+	fun `multiple subscribers all receive the same event`() = runTest(UnconfinedTestDispatcher()) {
 		val bus = EventBus()
 		val sessionId = UUID.randomUUID()
 		val event = TestPing(sessionId = sessionId, payload = "fanout")
