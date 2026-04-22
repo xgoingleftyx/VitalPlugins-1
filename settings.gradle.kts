@@ -6,7 +6,8 @@ include(
 	"walker",
 	"autologin",
 	"cow-killer",
-	"test"
+	"test",
+	"BuildCore"
 )
 
 for (project in rootProject.children) {
