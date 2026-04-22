@@ -1,6 +1,9 @@
 // BuildCore/BuildCore.gradle.kts
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
 plugins {
 	kotlin("jvm") version "2.1.0"
+	id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
 version = "0.1.0"
@@ -41,7 +44,17 @@ tasks.test {
 }
 
 tasks {
+	// Kotlin + FlatLaf + coroutines must be bundled into the shipped JAR because
+	// VitalShell's plugin classpath does not include them. We replace the default
+	// `jar` artifact with the shaded one so the root `afterEvaluate` auto-deploy
+	// hook ships the fat JAR, and later plan work doesn't break at runtime.
 	jar {
+		enabled = false
+	}
+
+	named<ShadowJar>("shadowJar") {
+		archiveClassifier.set("")
+		mergeServiceFiles()
 		manifest {
 			attributes(mapOf(
 				"Plugin-Version"     to project.version,
@@ -51,5 +64,13 @@ tasks {
 				"Plugin-License"     to project.extra["PluginLicense"]
 			))
 		}
+	}
+
+	build {
+		dependsOn("shadowJar")
+	}
+
+	assemble {
+		dependsOn("shadowJar")
 	}
 }
