@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 VitalPlugins is a standalone multi-module Gradle project that builds individual RuneLite-style plugins against VitalShell's RuneLite fork and the VitalAPI JNI bridge. Each plugin lives in its own subproject and is built into its own JAR.
 
-Current plugins: `walker`, `autologin`. Both were copied (with package rename) from `VitalShell/runelite-client/src/main/java/net/runelite/client/plugins/` — the originals remain in place in VitalShell.
+Current plugins: `walker`, `autologin`, `cow-killer`, `test`, and `BuildCore` (foundation framework for account builders — see [BuildCore/CLAUDE.md](./BuildCore/CLAUDE.md) and the spec at [docs/superpowers/specs/2026-04-21-buildcore-foundation-design.md](./docs/superpowers/specs/2026-04-21-buildcore-foundation-design.md)).
 
 ## Build
 
