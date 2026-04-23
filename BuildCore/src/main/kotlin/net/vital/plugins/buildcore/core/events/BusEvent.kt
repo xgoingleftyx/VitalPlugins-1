@@ -31,3 +31,132 @@ internal data class TestPing(
 	override val schemaVersion: Int = 1,
 	val payload: String
 ) : BusEvent
+
+// ─────────────────────────────────────────────────────────────────────
+// Task lifecycle events (spec §13)
+// Plan 3 completes the full ~50-type taxonomy; Plan 2 adds only those
+// emitted by the Runner during state transitions.
+// ─────────────────────────────────────────────────────────────────────
+
+data class TaskQueued(
+	override val eventId: UUID = UUID.randomUUID(),
+	override val timestamp: Instant = Instant.now(),
+	override val sessionId: UUID,
+	override val schemaVersion: Int = 1,
+	val taskInstanceId: UUID,
+	val taskId: String
+) : BusEvent
+
+data class TaskValidated(
+	override val eventId: UUID = UUID.randomUUID(),
+	override val timestamp: Instant = Instant.now(),
+	override val sessionId: UUID,
+	override val schemaVersion: Int = 1,
+	val taskInstanceId: UUID,
+	val taskId: String,
+	val pass: Boolean,
+	val rejectReason: String? = null
+) : BusEvent
+
+data class TaskStarted(
+	override val eventId: UUID = UUID.randomUUID(),
+	override val timestamp: Instant = Instant.now(),
+	override val sessionId: UUID,
+	override val schemaVersion: Int = 1,
+	val taskInstanceId: UUID,
+	val taskId: String,
+	val methodId: String,
+	val pathId: String
+) : BusEvent
+
+data class TaskProgress(
+	override val eventId: UUID = UUID.randomUUID(),
+	override val timestamp: Instant = Instant.now(),
+	override val sessionId: UUID,
+	override val schemaVersion: Int = 1,
+	val taskInstanceId: UUID,
+	val taskId: String
+) : BusEvent
+
+data class TaskCompleted(
+	override val eventId: UUID = UUID.randomUUID(),
+	override val timestamp: Instant = Instant.now(),
+	override val sessionId: UUID,
+	override val schemaVersion: Int = 1,
+	val taskInstanceId: UUID,
+	val taskId: String,
+	val durationMillis: Long
+) : BusEvent
+
+data class TaskFailed(
+	override val eventId: UUID = UUID.randomUUID(),
+	override val timestamp: Instant = Instant.now(),
+	override val sessionId: UUID,
+	override val schemaVersion: Int = 1,
+	val taskInstanceId: UUID,
+	val taskId: String,
+	val reasonType: String,
+	val reasonDetail: String,
+	val attemptNumber: Int
+) : BusEvent
+
+data class TaskRetrying(
+	override val eventId: UUID = UUID.randomUUID(),
+	override val timestamp: Instant = Instant.now(),
+	override val sessionId: UUID,
+	override val schemaVersion: Int = 1,
+	val taskInstanceId: UUID,
+	val taskId: String,
+	val attemptNumber: Int,
+	val backoffMillis: Long
+) : BusEvent
+
+data class TaskSkipped(
+	override val eventId: UUID = UUID.randomUUID(),
+	override val timestamp: Instant = Instant.now(),
+	override val sessionId: UUID,
+	override val schemaVersion: Int = 1,
+	val taskInstanceId: UUID,
+	val taskId: String,
+	val reason: String
+) : BusEvent
+
+data class TaskPaused(
+	override val eventId: UUID = UUID.randomUUID(),
+	override val timestamp: Instant = Instant.now(),
+	override val sessionId: UUID,
+	override val schemaVersion: Int = 1,
+	val taskInstanceId: UUID,
+	val taskId: String,
+	val reason: String
+) : BusEvent
+
+data class TaskResumed(
+	override val eventId: UUID = UUID.randomUUID(),
+	override val timestamp: Instant = Instant.now(),
+	override val sessionId: UUID,
+	override val schemaVersion: Int = 1,
+	val taskInstanceId: UUID,
+	val taskId: String
+) : BusEvent
+
+data class MethodPicked(
+	override val eventId: UUID = UUID.randomUUID(),
+	override val timestamp: Instant = Instant.now(),
+	override val sessionId: UUID,
+	override val schemaVersion: Int = 1,
+	val taskInstanceId: UUID,
+	val taskId: String,
+	val methodId: String
+) : BusEvent
+
+data class PathPicked(
+	override val eventId: UUID = UUID.randomUUID(),
+	override val timestamp: Instant = Instant.now(),
+	override val sessionId: UUID,
+	override val schemaVersion: Int = 1,
+	val taskInstanceId: UUID,
+	val taskId: String,
+	val pathId: String,
+	val pathKind: String
+) : BusEvent
