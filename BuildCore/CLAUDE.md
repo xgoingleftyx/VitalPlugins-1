@@ -8,7 +8,7 @@ All-inclusive OSRS account builder foundation for the VitalClient platform. See 
 
 ## Status
 
-**Foundation phase — Plan 1 (Project Bootstrap) complete.**
+**Foundation phase — Plans 1 + 2 complete.**
 
 Future plans in `../docs/superpowers/plans/`:
 - Plan 2 — Core Runtime + Task SPI + Restrictions
@@ -49,9 +49,13 @@ Cross-cutting: `core/restrictions/`, `core/antiban/`, `core/events/`, `core/logg
 
 Architecture tests live in `src/test/kotlin/net/vital/plugins/buildcore/arch/`. Each test cites the spec section it enforces. Adding a new rule = adding a new `@Test` in that directory.
 
-Current invariants:
+Current invariants (Plan 2):
 - `BusEvent` subtypes are data classes or objects (immutability).
 - `MutableSharedFlow` is only imported inside `core/events/`.
+- Every `Method` has exactly one `IRONMAN` path with no gatingRestrictions (enforced at ModuleRegistry.register and by Method.validateStructure).
+- `Task` implementations do not expose public `var` properties.
+- `Runner` is only used inside `core.task` package.
+- Profile restrictions: exactly one mule tier per RestrictionSet, additional cannot override archetype base.
 
 Plan 3 onward adds many more. Never weaken an architecture test — extend it or add a new one.
 
