@@ -67,14 +67,17 @@ class SessionManagerTest {
 		val summaryRef = AtomicReference<SessionSummary>()
 		val endRef     = AtomicReference<SessionEnd>()
 
-		val summaryJob = launch {
+		// Launch on scope.coroutineScope (buildcore-logger thread) rather than runBlocking's
+		// dispatcher — otherwise summaryLatch.await() below blocks the only thread that
+		// could run these collectors, causing a deadlock before they ever subscribe.
+		val summaryJob = scope.coroutineScope.launch {
 			bus.events
 				.onStart { summaryLatch.countDown() }
 				.filterIsInstance<SessionSummary>()
 				.first()
 				.also { summaryRef.set(it) }
 		}
-		val endJob = launch {
+		val endJob = scope.coroutineScope.launch {
 			bus.events
 				.onStart { endLatch.countDown() }
 				.filterIsInstance<SessionEnd>()

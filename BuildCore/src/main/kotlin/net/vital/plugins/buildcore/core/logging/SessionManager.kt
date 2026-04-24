@@ -4,7 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import net.vital.plugins.buildcore.core.events.BusEvent
 import net.vital.plugins.buildcore.core.events.EventBus
 import net.vital.plugins.buildcore.core.events.LaunchMode
@@ -62,6 +64,19 @@ class SessionManager(
 		layout.createSessionDir(sessionId)
 		writeSessionMeta(state = "running", endedAt = null)
 
+		// Register the counter-subscriber BEFORE emitting SessionStart so that:
+		// (a) it sees SessionStart (harmless — it doesn't count that type), and
+		// (b) any event callers emit immediately after start() returns is not
+		//     raced past the subscriber's registration. The latch ensures
+		//     subscription is active before start() returns to the caller.
+		val subscribed = java.util.concurrent.CountDownLatch(1)
+		loggerScope.coroutineScope.launch {
+			bus.events
+				.onStart { subscribed.countDown() }
+				.collect { e -> updateCounters(e) }
+		}
+		subscribed.await()
+
 		bus.tryEmit(
 			SessionStart(
 				sessionId = sessionId,
@@ -70,16 +85,18 @@ class SessionManager(
 				launchMode = launchMode
 			)
 		)
-
-		loggerScope.coroutineScope.launch {
-			bus.events.collect { e -> updateCounters(e) }
-		}
 	}
 
 	suspend fun requestStop(reason: StopReason = StopReason.USER)
 	{
 		if (!ended.compareAndSet(false, true)) return
 		val durationMs = Duration.between(startedAt, clock.instant()).toMillis()
+
+		// Hop to the logger thread so any events queued before requestStop
+		// was called have been processed by the counter-subscriber (FIFO on
+		// a single-thread dispatcher). Without this, taskCounters may be
+		// stale when we snapshot it for SessionSummary below.
+		withContext(loggerScope.dispatcher) { /* barrier */ }
 
 		bus.emit(
 			SessionSummary(
