@@ -325,3 +325,64 @@ data class SubscriberOverflowed(
 	val subscriberName: String,
 	val droppedCount: Int
 ) : BusEvent
+
+// ─────────────────────────────────────────────────────────────────────
+// Antiban events (Plan 4a spec §10)
+// ─────────────────────────────────────────────────────────────────────
+
+enum class InputKind {
+	MOUSE_MOVE, MOUSE_CLICK,
+	KEY_TAP, KEY_DOWN, KEY_UP, KEY_TYPE,
+	CAMERA_ROTATE, CAMERA_PITCH
+}
+
+enum class InputMode { NORMAL, PRECISION, SURVIVAL }
+
+data class InputAction(
+	override val eventId: UUID = UUID.randomUUID(),
+	override val timestamp: Instant = Instant.now(),
+	override val sessionId: UUID,
+	override val schemaVersion: Int = 1,
+	override val taskInstanceId: UUID? = null,
+	override val moduleId: String? = null,
+	val kind: InputKind,
+	val targetX: Int? = null,
+	val targetY: Int? = null,
+	val durationMillis: Long,
+	val mode: InputMode = InputMode.NORMAL
+) : BusEvent
+
+data class FatigueUpdated(
+	override val eventId: UUID = UUID.randomUUID(),
+	override val timestamp: Instant = Instant.now(),
+	override val sessionId: UUID,
+	override val schemaVersion: Int = 1,
+	override val taskInstanceId: UUID? = null,
+	override val moduleId: String? = null,
+	val sessionAgeMillis: Long,
+	val reactionMultiplier: Double,
+	val misclickMultiplier: Double,
+	val overshootVarianceMultiplier: Double,
+	val fidgetRateMultiplier: Double
+) : BusEvent
+
+data class PersonalityResolved(
+	override val eventId: UUID = UUID.randomUUID(),
+	override val timestamp: Instant = Instant.now(),
+	override val sessionId: UUID,
+	override val schemaVersion: Int = 1,
+	override val taskInstanceId: UUID? = null,
+	override val moduleId: String? = null,
+	val usernameHash: String,
+	val generated: Boolean
+) : BusEvent
+
+data class SessionRngSeeded(
+	override val eventId: UUID = UUID.randomUUID(),
+	override val timestamp: Instant = Instant.now(),
+	override val sessionId: UUID,
+	override val schemaVersion: Int = 1,
+	override val taskInstanceId: UUID? = null,
+	override val moduleId: String? = null,
+	val seed: Long
+) : BusEvent
