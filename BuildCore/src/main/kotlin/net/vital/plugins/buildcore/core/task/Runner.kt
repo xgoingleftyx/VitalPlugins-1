@@ -108,7 +108,16 @@ class Runner(
 			)
 
 			val path = PathSelector.pick(method.paths, restrictions, accountState)
-				?: return fail(instance, "NO_ALLOWED_PATH", "no path allowed by restrictions/reqs", startNanos)
+			if (path == null) {
+				bus.emit(net.vital.plugins.buildcore.core.events.RestrictionViolated(
+					sessionId = sessionId,
+					taskInstanceId = instance.id,
+					restrictionId = "composite",
+					effectSummary = "no path allowed by restrictions/reqs for task=${instance.task.id.raw}",
+					moment = net.vital.plugins.buildcore.core.events.RestrictionMoment.START
+				))
+				return fail(instance, "NO_ALLOWED_PATH", "no path allowed by restrictions/reqs", startNanos)
+			}
 			bus.emit(
 				PathPicked(
 					sessionId = sessionId,

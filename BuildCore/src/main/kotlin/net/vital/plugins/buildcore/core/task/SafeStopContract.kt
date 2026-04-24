@@ -33,7 +33,14 @@ object SafeStopContract {
 		require(pollInterval > Duration.ZERO) { "pollInterval must be positive" }
 		require(maxDefer >= Duration.ZERO) { "maxDefer must be non-negative" }
 
-		val deadline = System.nanoTime() + maxDefer.inWholeNanoseconds
+		val startNanos = System.nanoTime()
+		ctx.eventBus.tryEmit(net.vital.plugins.buildcore.core.events.SafeStopRequested(
+			sessionId = ctx.sessionId,
+			taskInstanceId = ctx.taskInstanceId,
+			reason = "stop requested for task=${instance.task.id.raw}"
+		))
+
+		val deadline = startNanos + maxDefer.inWholeNanoseconds
 		var canStopReached = false
 		while (System.nanoTime() < deadline) {
 			if (instance.task.canStopNow(ctx)) {
@@ -48,6 +55,13 @@ object SafeStopContract {
 			instance.setState(TaskState.STOPPING)
 		}
 		instance.task.safeStop(ctx)
+
+		val durationMs = (System.nanoTime() - startNanos) / 1_000_000
+		ctx.eventBus.tryEmit(net.vital.plugins.buildcore.core.events.SafeStopCompleted(
+			sessionId = ctx.sessionId,
+			taskInstanceId = ctx.taskInstanceId,
+			durationMillis = durationMs
+		))
 
 		return Outcome(
 			completed = true,

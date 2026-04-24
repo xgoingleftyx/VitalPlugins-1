@@ -14,17 +14,25 @@ package net.vital.plugins.buildcore.core.task
  * Thread-safety: intended to be populated at startup before the Runner
  * begins. Once registered, tasks are read-only.
  */
-class ModuleRegistry {
+class ModuleRegistry(
+	private val bus: net.vital.plugins.buildcore.core.events.EventBus? = null,
+	private val sessionId: java.util.UUID = java.util.UUID(0, 0)
+) {
 
 	private val tasks = mutableMapOf<TaskId, Task>()
 
 	fun register(task: Task): ModuleRegistry {
 		val validation = task.validateStructure()
-		require(validation is ValidationResult.Pass) {
-			"Cannot register task '${task.id}': $validation"
+		if (validation !is ValidationResult.Pass) {
+			bus?.tryEmit(net.vital.plugins.buildcore.core.events.ValidationFailed(
+				sessionId = sessionId,
+				subject = "Task/${task.id.raw}",
+				detail = "structural validation failed: $validation"
+			))
+			throw IllegalArgumentException("Cannot register task '${task.id}': $validation")
 		}
-		require(task.id !in tasks) {
-			"Task '${task.id}' is already registered"
+		if (task.id in tasks) {
+			throw IllegalArgumentException("Task '${task.id}' is already registered")
 		}
 		tasks[task.id] = task
 		return this
