@@ -23,6 +23,9 @@ dependencies {
 	implementation(rootProject.libs.jackson.databind)
 	implementation(rootProject.libs.jackson.datatype.jsr310)
 
+	// VitalAPI — compileOnly because VitalShell's plugin classpath provides it at runtime
+	compileOnly(rootProject.libs.vital.api)
+
 	// GUI
 	implementation(rootProject.libs.flatlaf)
 	implementation(rootProject.libs.flatlaf.intellij)
