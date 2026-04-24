@@ -14,6 +14,7 @@ import net.vital.plugins.buildcore.core.logging.NoOpReplaySubscriber
 import net.vital.plugins.buildcore.core.logging.NoOpTelemetrySubscriber
 import net.vital.plugins.buildcore.core.logging.PerformanceAggregator
 import net.vital.plugins.buildcore.core.logging.SessionManager
+import net.vital.plugins.buildcore.core.antiban.AntibanBootstrap
 import net.vital.plugins.buildcore.core.logging.UncaughtExceptionHandler
 
 @PluginDescriptor(
@@ -59,6 +60,12 @@ class BuildCorePlugin : Plugin() {
 		performanceAggregator.start(eventBus)
 
 		UncaughtExceptionHandler.install(eventBus) { sessionManager.sessionId }
+
+		AntibanBootstrap.install(
+			bus = eventBus,
+			sessionIdProvider = { sessionManager.sessionId },
+			layout = layout
+		)
 	}
 
 	override fun shutDown() {
