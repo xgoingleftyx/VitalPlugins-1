@@ -43,6 +43,20 @@ class LogDirLayout(val root: Path)
 		entries.take(toDelete).forEach { deleteRecursively(it) }
 	}
 
+	/**
+	 * Sibling directory to the logs root — `.../personalities/` (not nested under logs).
+	 * Plan 4a's [net.vital.plugins.buildcore.core.antiban.personality.PersonalityStore]
+	 * persists per-account personalities here.
+	 *
+	 * Spec §6.3.
+	 */
+	fun personalityDir(): Path
+	{
+		val dir = root.resolveSibling("personalities")
+		Files.createDirectories(dir)
+		return dir
+	}
+
 	private fun deleteRecursively(path: Path)
 	{
 		if (Files.isDirectory(path))
