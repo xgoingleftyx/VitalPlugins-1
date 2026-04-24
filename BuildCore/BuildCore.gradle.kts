@@ -18,6 +18,11 @@ dependencies {
 	implementation(rootProject.libs.coroutines.core)
 	implementation(rootProject.libs.coroutines.swing)
 
+	// JSON serialisation for JSONL event logging (Plan 3)
+	implementation(rootProject.libs.jackson.module.kotlin)
+	implementation(rootProject.libs.jackson.databind)
+	implementation(rootProject.libs.jackson.datatype.jsr310)
+
 	// GUI
 	implementation(rootProject.libs.flatlaf)
 	implementation(rootProject.libs.flatlaf.intellij)

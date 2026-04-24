@@ -9,6 +9,7 @@ jetbrains-annotations = "23.0.0"
 kotlin                = "2.1.0"
 coroutines            = "1.9.0"
 flatlaf               = "3.5"
+jackson               = "2.17.2"
 junit                 = "5.10.3"
 mockk                 = "1.13.13"
 konsist               = "0.17.3"
@@ -32,6 +33,10 @@ coroutines-test       = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-tes
 flatlaf               = { module = "com.formdev:flatlaf",                version.ref = "flatlaf" }
 flatlaf-intellij      = { module = "com.formdev:flatlaf-intellij-themes", version.ref = "flatlaf" }
 flatlaf-extras        = { module = "com.formdev:flatlaf-extras",         version.ref = "flatlaf" }
+
+jackson-module-kotlin = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version.ref = "jackson" }
+jackson-databind      = { module = "com.fasterxml.jackson.core:jackson-databind",        version.ref = "jackson" }
+jackson-datatype-jsr310 = { module = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310", version.ref = "jackson" }
 
 junit-bom             = { module = "org.junit:junit-bom",                version.ref = "junit" }
 junit-jupiter         = { module = "org.junit.jupiter:junit-jupiter" }
