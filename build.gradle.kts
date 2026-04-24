@@ -17,8 +17,24 @@ subprojects {
 		mavenCentral()
 		maven("https://repo.runelite.net")
 		maven {
+			name = "GitHubPackagesVitalAPIFork"
+			url = uri("https://maven.pkg.github.com/xgoingleftyx/VitalAPI")
+			credentials {
+				username = System.getenv("GITHUB_ACTOR")
+				password = System.getenv("GITHUB_TOKEN")
+			}
+		}
+		maven {
 			name = "GitHubPackagesVitalAPI"
 			url = uri("https://maven.pkg.github.com/Vitalflea/VitalAPI")
+			credentials {
+				username = System.getenv("GITHUB_ACTOR")
+				password = System.getenv("GITHUB_TOKEN")
+			}
+		}
+		maven {
+			name = "GitHubPackagesVitalShellFork"
+			url = uri("https://maven.pkg.github.com/xgoingleftyx/VitalShell")
 			credentials {
 				username = System.getenv("GITHUB_ACTOR")
 				password = System.getenv("GITHUB_TOKEN")
