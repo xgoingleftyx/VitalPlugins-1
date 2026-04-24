@@ -177,3 +177,151 @@ data class PathPicked(
 	val pathId: String,
 	val pathKind: String
 ) : BusEvent
+
+// ─────────────────────────────────────────────────────────────────────
+// Session lifecycle (Plan 3 spec §5.2)
+// ─────────────────────────────────────────────────────────────────────
+
+enum class LaunchMode { NORMAL, HEADLESS, TEST }
+enum class StopReason { USER, CRASH, SAFE_STOP, UPDATE }
+
+data class SessionStart(
+	override val eventId: UUID = UUID.randomUUID(),
+	override val timestamp: Instant = Instant.now(),
+	override val sessionId: UUID,
+	override val schemaVersion: Int = 1,
+	override val taskInstanceId: UUID? = null,
+	override val moduleId: String? = null,
+	val buildcoreVersion: String,
+	val archetype: String? = null,
+	val launchMode: LaunchMode = LaunchMode.NORMAL
+) : BusEvent
+
+data class SessionEnd(
+	override val eventId: UUID = UUID.randomUUID(),
+	override val timestamp: Instant = Instant.now(),
+	override val sessionId: UUID,
+	override val schemaVersion: Int = 1,
+	override val taskInstanceId: UUID? = null,
+	override val moduleId: String? = null,
+	val reason: StopReason
+) : BusEvent
+
+data class TaskCounter(
+	val started: Int = 0,
+	val completed: Int = 0,
+	val failed: Int = 0,
+	val skipped: Int = 0
+)
+
+data class SessionSummary(
+	override val eventId: UUID = UUID.randomUUID(),
+	override val timestamp: Instant = Instant.now(),
+	override val sessionId: UUID,
+	override val schemaVersion: Int = 1,
+	override val taskInstanceId: UUID? = null,
+	override val moduleId: String? = null,
+	val durationMillis: Long,
+	val taskCounts: Map<String, TaskCounter>,
+	val totalEvents: Long
+) : BusEvent
+
+// ─────────────────────────────────────────────────────────────────────
+// Safe stop
+// ─────────────────────────────────────────────────────────────────────
+
+data class SafeStopRequested(
+	override val eventId: UUID = UUID.randomUUID(),
+	override val timestamp: Instant = Instant.now(),
+	override val sessionId: UUID,
+	override val schemaVersion: Int = 1,
+	override val taskInstanceId: UUID? = null,
+	override val moduleId: String? = null,
+	val reason: String
+) : BusEvent
+
+data class SafeStopCompleted(
+	override val eventId: UUID = UUID.randomUUID(),
+	override val timestamp: Instant = Instant.now(),
+	override val sessionId: UUID,
+	override val schemaVersion: Int = 1,
+	override val taskInstanceId: UUID? = null,
+	override val moduleId: String? = null,
+	val durationMillis: Long
+) : BusEvent
+
+// ─────────────────────────────────────────────────────────────────────
+// Errors
+// ─────────────────────────────────────────────────────────────────────
+
+data class UnhandledException(
+	override val eventId: UUID = UUID.randomUUID(),
+	override val timestamp: Instant = Instant.now(),
+	override val sessionId: UUID,
+	override val schemaVersion: Int = 1,
+	override val taskInstanceId: UUID? = null,
+	override val moduleId: String? = null,
+	val threadName: String,
+	val exceptionClass: String,
+	val message: String,
+	val stackTrace: String
+) : BusEvent
+
+data class ValidationFailed(
+	override val eventId: UUID = UUID.randomUUID(),
+	override val timestamp: Instant = Instant.now(),
+	override val sessionId: UUID,
+	override val schemaVersion: Int = 1,
+	override val taskInstanceId: UUID? = null,
+	override val moduleId: String? = null,
+	val subject: String,
+	val detail: String
+) : BusEvent
+
+enum class RestrictionMoment { EDIT, START, RUNTIME }
+
+data class RestrictionViolated(
+	override val eventId: UUID = UUID.randomUUID(),
+	override val timestamp: Instant = Instant.now(),
+	override val sessionId: UUID,
+	override val schemaVersion: Int = 1,
+	override val taskInstanceId: UUID? = null,
+	override val moduleId: String? = null,
+	val restrictionId: String,
+	val effectSummary: String,
+	val moment: RestrictionMoment
+) : BusEvent
+
+// ─────────────────────────────────────────────────────────────────────
+// Performance
+// ─────────────────────────────────────────────────────────────────────
+
+data class PerformanceSample(
+	override val eventId: UUID = UUID.randomUUID(),
+	override val timestamp: Instant = Instant.now(),
+	override val sessionId: UUID,
+	override val schemaVersion: Int = 1,
+	override val taskInstanceId: UUID? = null,
+	override val moduleId: String? = null,
+	val intervalSeconds: Long,
+	val eventRatePerSec: Double,
+	val jvmHeapUsedMb: Long,
+	val jvmHeapMaxMb: Long,
+	val loggerLagMaxMs: Long,
+	val droppedEventsSinceLastSample: Long
+) : BusEvent
+
+// ─────────────────────────────────────────────────────────────────────
+// Slow-subscriber overflow (generic; reused by Plan 4 & Plan 8)
+// ─────────────────────────────────────────────────────────────────────
+
+data class SubscriberOverflowed(
+	override val eventId: UUID = UUID.randomUUID(),
+	override val timestamp: Instant = Instant.now(),
+	override val sessionId: UUID,
+	override val schemaVersion: Int = 1,
+	override val taskInstanceId: UUID? = null,
+	override val moduleId: String? = null,
+	val subscriberName: String,
+	val droppedCount: Int
+) : BusEvent
