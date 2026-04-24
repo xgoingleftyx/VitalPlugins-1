@@ -1,20 +1,21 @@
 package net.vital.plugins.buildcore
 
+import kotlinx.coroutines.runBlocking
 import net.runelite.client.plugins.Plugin
 import net.runelite.client.plugins.PluginDescriptor
 import net.vital.plugins.buildcore.core.events.EventBus
+import net.vital.plugins.buildcore.core.events.SubscriberRegistry
+import net.vital.plugins.buildcore.core.logging.LocalJsonlWriter
+import net.vital.plugins.buildcore.core.logging.LocalSummaryWriter
+import net.vital.plugins.buildcore.core.logging.LogConfig
+import net.vital.plugins.buildcore.core.logging.LogDirLayout
+import net.vital.plugins.buildcore.core.logging.LoggerScope
+import net.vital.plugins.buildcore.core.logging.NoOpReplaySubscriber
+import net.vital.plugins.buildcore.core.logging.NoOpTelemetrySubscriber
+import net.vital.plugins.buildcore.core.logging.PerformanceAggregator
+import net.vital.plugins.buildcore.core.logging.SessionManager
+import net.vital.plugins.buildcore.core.logging.UncaughtExceptionHandler
 
-/**
- * BuildCore RuneLite plugin entry point.
- *
- * Lifecycle is owned by VitalShell's plugin manager. Plan 1 only
- * establishes startup/shutdown paths — Plan 2 wires the task runner,
- * Plan 10 wires the full GUI launch.
- *
- * The [eventBus] field is exposed as package-visible so early
- * subsystems can share a single bus instance for their integration
- * tests. Plan 2 replaces this with a Guice-provided binding.
- */
 @PluginDescriptor(
 	name = "BuildCore",
 	description = "All-inclusive OSRS account builder foundation",
@@ -22,21 +23,50 @@ import net.vital.plugins.buildcore.core.events.EventBus
 )
 class BuildCorePlugin : Plugin() {
 
-	internal val eventBus: EventBus = EventBus()
+	internal lateinit var eventBus: EventBus
+	private lateinit var loggerScope: LoggerScope
+	private lateinit var sessionManager: SessionManager
+	private lateinit var subscriberRegistry: SubscriberRegistry
+	private lateinit var performanceAggregator: PerformanceAggregator
 
 	override fun startUp() {
-		log("BuildCore plugin starting — v${version()}")
+		val cfg = LogConfig.load()
+		val layout = LogDirLayout(cfg.logRootDir)
+
+		eventBus = EventBus()
+		loggerScope = LoggerScope()
+		sessionManager = SessionManager(
+			bus = eventBus,
+			loggerScope = loggerScope,
+			layout = layout,
+			retentionSessions = cfg.retentionSessions
+		)
+		val sessionDir = layout.sessionDir(sessionManager.sessionId)
+
+		subscriberRegistry = SubscriberRegistry()
+			.register(LocalJsonlWriter(sessionDir = sessionDir, capBytes = cfg.rotationSizeBytes))
+			.register(LocalSummaryWriter(sessionDir = sessionDir, level = cfg.level))
+			.register(NoOpTelemetrySubscriber { sessionManager.sessionId })
+			.register(NoOpReplaySubscriber  { sessionManager.sessionId })
+		subscriberRegistry.attachAll(eventBus, loggerScope)
+
+		sessionManager.start()
+
+		performanceAggregator = PerformanceAggregator(
+			intervalMillis = cfg.performanceSampleIntervalMillis,
+			sessionIdProvider = { sessionManager.sessionId }
+		)
+		performanceAggregator.start(eventBus)
+
+		UncaughtExceptionHandler.install(eventBus) { sessionManager.sessionId }
 	}
 
 	override fun shutDown() {
-		log("BuildCore plugin shutting down")
-	}
-
-	private fun version(): String = javaClass.`package`?.implementationVersion ?: "dev"
-
-	private fun log(message: String) {
-		// Plan 3 replaces with structured event emission. For now, stderr
-		// so we can see it in the VitalClient console on first load.
-		System.err.println("[BuildCore] $message")
+		runBlocking {
+			performanceAggregator.stop()
+			sessionManager.requestStop()
+			subscriberRegistry.drainAll()
+		}
+		loggerScope.close()
 	}
 }
