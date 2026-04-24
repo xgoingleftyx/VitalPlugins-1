@@ -31,8 +31,8 @@ jobs:
 
       - name: Build BuildCore
         env:
-          GITHUB_ACTOR: ${{ github.actor }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_ACTOR: xgoingleftyx
+          GITHUB_TOKEN: ${{ secrets.VITAL_GPR_TOKEN }}
         run: ./gradlew :BuildCore:build --no-daemon --stacktrace
 
       - name: Upload test reports on failure
