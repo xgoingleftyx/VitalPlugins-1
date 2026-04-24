@@ -6,36 +6,41 @@ import java.util.UUID
 /**
  * Marker for every event that flows through [EventBus].
  *
- * Every event MUST carry correlation IDs. See spec §13 for the full
- * taxonomy — this class will acquire ~50 sealed subtypes in Plan 3.
+ * Every event carries correlation IDs: [eventId], [sessionId] are
+ * always present; [taskInstanceId] and [moduleId] are nullable for
+ * events without a task context (session lifecycle, performance).
  *
  * Events MUST be immutable data classes for thread-safe propagation
  * through [kotlinx.coroutines.flow.SharedFlow]. The [LayeringTest]
- * architecture test enforces this invariant.
+ * architecture test enforces immutability.
+ *
+ * Spec §5 (taxonomy), §13 (correlation IDs).
  */
 sealed interface BusEvent {
 	val eventId: UUID
 	val timestamp: Instant
 	val sessionId: UUID
 	val schemaVersion: Int
+	val taskInstanceId: UUID?
+	val moduleId: String?
 }
 
-/**
- * Test-only event used to prove bus plumbing works. Plan 3 removes this
- * when the real event taxonomy lands.
- */
+// ─────────────────────────────────────────────────────────────────────
+// Test-only event (kept from Plan 1)
+// ─────────────────────────────────────────────────────────────────────
+
 internal data class TestPing(
 	override val eventId: UUID = UUID.randomUUID(),
 	override val timestamp: Instant = Instant.now(),
 	override val sessionId: UUID,
 	override val schemaVersion: Int = 1,
+	override val taskInstanceId: UUID? = null,
+	override val moduleId: String? = null,
 	val payload: String
 ) : BusEvent
 
 // ─────────────────────────────────────────────────────────────────────
-// Task lifecycle events (spec §13)
-// Plan 3 completes the full ~50-type taxonomy; Plan 2 adds only those
-// emitted by the Runner during state transitions.
+// Task lifecycle (from Plan 2 — correlation IDs now go through the interface)
 // ─────────────────────────────────────────────────────────────────────
 
 data class TaskQueued(
@@ -43,7 +48,8 @@ data class TaskQueued(
 	override val timestamp: Instant = Instant.now(),
 	override val sessionId: UUID,
 	override val schemaVersion: Int = 1,
-	val taskInstanceId: UUID,
+	override val taskInstanceId: UUID,
+	override val moduleId: String? = null,
 	val taskId: String
 ) : BusEvent
 
@@ -52,7 +58,8 @@ data class TaskValidated(
 	override val timestamp: Instant = Instant.now(),
 	override val sessionId: UUID,
 	override val schemaVersion: Int = 1,
-	val taskInstanceId: UUID,
+	override val taskInstanceId: UUID,
+	override val moduleId: String? = null,
 	val taskId: String,
 	val pass: Boolean,
 	val rejectReason: String? = null
@@ -63,7 +70,8 @@ data class TaskStarted(
 	override val timestamp: Instant = Instant.now(),
 	override val sessionId: UUID,
 	override val schemaVersion: Int = 1,
-	val taskInstanceId: UUID,
+	override val taskInstanceId: UUID,
+	override val moduleId: String? = null,
 	val taskId: String,
 	val methodId: String,
 	val pathId: String
@@ -74,7 +82,8 @@ data class TaskProgress(
 	override val timestamp: Instant = Instant.now(),
 	override val sessionId: UUID,
 	override val schemaVersion: Int = 1,
-	val taskInstanceId: UUID,
+	override val taskInstanceId: UUID,
+	override val moduleId: String? = null,
 	val taskId: String
 ) : BusEvent
 
@@ -83,7 +92,8 @@ data class TaskCompleted(
 	override val timestamp: Instant = Instant.now(),
 	override val sessionId: UUID,
 	override val schemaVersion: Int = 1,
-	val taskInstanceId: UUID,
+	override val taskInstanceId: UUID,
+	override val moduleId: String? = null,
 	val taskId: String,
 	val durationMillis: Long
 ) : BusEvent
@@ -93,7 +103,8 @@ data class TaskFailed(
 	override val timestamp: Instant = Instant.now(),
 	override val sessionId: UUID,
 	override val schemaVersion: Int = 1,
-	val taskInstanceId: UUID,
+	override val taskInstanceId: UUID,
+	override val moduleId: String? = null,
 	val taskId: String,
 	val reasonType: String,
 	val reasonDetail: String,
@@ -105,7 +116,8 @@ data class TaskRetrying(
 	override val timestamp: Instant = Instant.now(),
 	override val sessionId: UUID,
 	override val schemaVersion: Int = 1,
-	val taskInstanceId: UUID,
+	override val taskInstanceId: UUID,
+	override val moduleId: String? = null,
 	val taskId: String,
 	val attemptNumber: Int,
 	val backoffMillis: Long
@@ -116,7 +128,8 @@ data class TaskSkipped(
 	override val timestamp: Instant = Instant.now(),
 	override val sessionId: UUID,
 	override val schemaVersion: Int = 1,
-	val taskInstanceId: UUID,
+	override val taskInstanceId: UUID,
+	override val moduleId: String? = null,
 	val taskId: String,
 	val reason: String
 ) : BusEvent
@@ -126,7 +139,8 @@ data class TaskPaused(
 	override val timestamp: Instant = Instant.now(),
 	override val sessionId: UUID,
 	override val schemaVersion: Int = 1,
-	val taskInstanceId: UUID,
+	override val taskInstanceId: UUID,
+	override val moduleId: String? = null,
 	val taskId: String,
 	val reason: String
 ) : BusEvent
@@ -136,7 +150,8 @@ data class TaskResumed(
 	override val timestamp: Instant = Instant.now(),
 	override val sessionId: UUID,
 	override val schemaVersion: Int = 1,
-	val taskInstanceId: UUID,
+	override val taskInstanceId: UUID,
+	override val moduleId: String? = null,
 	val taskId: String
 ) : BusEvent
 
@@ -145,7 +160,8 @@ data class MethodPicked(
 	override val timestamp: Instant = Instant.now(),
 	override val sessionId: UUID,
 	override val schemaVersion: Int = 1,
-	val taskInstanceId: UUID,
+	override val taskInstanceId: UUID,
+	override val moduleId: String? = null,
 	val taskId: String,
 	val methodId: String
 ) : BusEvent
@@ -155,7 +171,8 @@ data class PathPicked(
 	override val timestamp: Instant = Instant.now(),
 	override val sessionId: UUID,
 	override val schemaVersion: Int = 1,
-	val taskInstanceId: UUID,
+	override val taskInstanceId: UUID,
+	override val moduleId: String? = null,
 	val taskId: String,
 	val pathId: String,
 	val pathKind: String
