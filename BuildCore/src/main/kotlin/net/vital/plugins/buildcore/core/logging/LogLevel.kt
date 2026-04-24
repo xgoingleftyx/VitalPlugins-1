@@ -13,7 +13,7 @@ enum class LogLevel {
 
 	companion object {
 		fun parse(raw: String?): LogLevel = raw?.uppercase()?.let {
-			values().firstOrNull { lvl -> lvl.name == it }
+			entries.firstOrNull { lvl -> lvl.name == it }
 		} ?: INFO
 	}
 }
