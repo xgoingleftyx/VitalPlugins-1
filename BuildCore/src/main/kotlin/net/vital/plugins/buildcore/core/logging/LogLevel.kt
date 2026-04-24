@@ -1,7 +1,11 @@
 package net.vital.plugins.buildcore.core.logging
 
 import net.vital.plugins.buildcore.core.events.BusEvent
+import net.vital.plugins.buildcore.core.events.FatigueUpdated
+import net.vital.plugins.buildcore.core.events.InputAction
+import net.vital.plugins.buildcore.core.events.PersonalityResolved
 import net.vital.plugins.buildcore.core.events.RestrictionViolated
+import net.vital.plugins.buildcore.core.events.SessionRngSeeded
 import net.vital.plugins.buildcore.core.events.SafeStopCompleted
 import net.vital.plugins.buildcore.core.events.SafeStopRequested
 import net.vital.plugins.buildcore.core.events.SessionEnd
@@ -54,5 +58,7 @@ fun levelOf(event: BusEvent): LogLevel = when (event) {
 	is ValidationFailed, is RestrictionViolated -> LogLevel.WARN
 	is TaskFailed -> LogLevel.ERROR
 	is UnhandledException -> LogLevel.FATAL
+	is InputAction, is FatigueUpdated,
+	is PersonalityResolved, is SessionRngSeeded -> LogLevel.DEBUG
 	else -> LogLevel.DEBUG
 }

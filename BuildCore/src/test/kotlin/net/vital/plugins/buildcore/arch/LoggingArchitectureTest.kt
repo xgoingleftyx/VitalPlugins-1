@@ -40,7 +40,7 @@ class LoggingArchitectureTest {
 		// Actual invocation coverage lives in PrivacyScrubberTest."every BusEvent subtype returns without throwing".
 		// This test only asserts the *count* matches the scrubber's known universe — a drift-detector.
 		val expected = subtypes.size
-		val scrubberSampleCount = 23                // update when a new subtype is added to the scrubber AND to this test
+		val scrubberSampleCount = 27                // update when a new subtype is added to the scrubber AND to this test
 		assertTrue("BusEvent subtype count ($expected) must match PrivacyScrubberTest sample count ($scrubberSampleCount)") {
 			expected == scrubberSampleCount
 		}

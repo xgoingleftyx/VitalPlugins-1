@@ -1,5 +1,10 @@
 package net.vital.plugins.buildcore.core.events
 
+import net.vital.plugins.buildcore.core.events.FatigueUpdated
+import net.vital.plugins.buildcore.core.events.InputAction
+import net.vital.plugins.buildcore.core.events.InputKind
+import net.vital.plugins.buildcore.core.events.PersonalityResolved
+import net.vital.plugins.buildcore.core.events.SessionRngSeeded
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -87,10 +92,16 @@ class PrivacyScrubberTest {
 			PerformanceSample(sessionId = sid, intervalSeconds = 300, eventRatePerSec = 1.0,
 				jvmHeapUsedMb = 100, jvmHeapMaxMb = 1000, loggerLagMaxMs = 0, droppedEventsSinceLastSample = 0),
 			SubscriberOverflowed(sessionId = sid, subscriberName = "telemetry", droppedCount = 3),
-			TestPing(sessionId = sid, payload = "hi")
+			TestPing(sessionId = sid, payload = "hi"),
+			InputAction(sessionId = sid, kind = InputKind.MOUSE_CLICK, durationMillis = 5),
+			FatigueUpdated(sessionId = sid, sessionAgeMillis = 0,
+				reactionMultiplier = 1.0, misclickMultiplier = 1.0,
+				overshootVarianceMultiplier = 1.0, fidgetRateMultiplier = 1.0),
+			PersonalityResolved(sessionId = sid, usernameHash = "abc123def456", generated = true),
+			SessionRngSeeded(sessionId = sid, seed = 42L)
 		)
-		// Must cover all 23 current subtypes — update this list when Plans 4/6/8 add new ones.
-		assertEquals(23, samples.size, "update the sample list when a new BusEvent subtype is added")
+		// Must cover all 27 current subtypes — update this list when Plans 4b/6/8 add new ones.
+		assertEquals(27, samples.size, "update the sample list when a new BusEvent subtype is added")
 		samples.forEach { PrivacyScrubber.scrub(it) }  // just assert no throw
 	}
 }

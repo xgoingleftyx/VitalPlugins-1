@@ -69,6 +69,10 @@ object PrivacyScrubber {
 		is PerformanceSample    -> event
 		is SubscriberOverflowed -> event
 		is TestPing             -> event.copy(payload = "«scrubbed»")
+		is InputAction         -> event
+		is FatigueUpdated      -> event
+		is PersonalityResolved -> event
+		is SessionRngSeeded    -> event
 	}
 
 	private fun scrubString(s: String): String = s
