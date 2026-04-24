@@ -51,7 +51,8 @@ import java.util.concurrent.CountDownLatch
  */
 class LocalSummaryWriter(
 	sessionDir: Path,
-	private val level: LogLevel
+	private val level: LogLevel,
+	capBytes: Long = 10L * 1024 * 1024
 ) : LogSubscriber {
 
 	override val name: String = "local-summary"
@@ -59,7 +60,7 @@ class LocalSummaryWriter(
 
 	private val sink = RotatingFileSink(
 		target = sessionDir.resolve("summary.log"),
-		capBytes = 10L * 1024 * 1024,
+		capBytes = capBytes,
 		maxRotations = 1              // summary rotates once; jsonl is the source of truth
 	)
 

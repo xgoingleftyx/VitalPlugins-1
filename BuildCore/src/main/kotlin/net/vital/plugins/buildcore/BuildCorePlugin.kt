@@ -45,7 +45,7 @@ class BuildCorePlugin : Plugin() {
 
 		subscriberRegistry = SubscriberRegistry()
 			.register(LocalJsonlWriter(sessionDir = sessionDir, capBytes = cfg.rotationSizeBytes))
-			.register(LocalSummaryWriter(sessionDir = sessionDir, level = cfg.level))
+			.register(LocalSummaryWriter(sessionDir = sessionDir, level = cfg.level, capBytes = cfg.summaryCapBytes))
 			.register(NoOpTelemetrySubscriber { sessionManager.sessionId })
 			.register(NoOpReplaySubscriber  { sessionManager.sessionId })
 		subscriberRegistry.attachAll(eventBus, loggerScope)
