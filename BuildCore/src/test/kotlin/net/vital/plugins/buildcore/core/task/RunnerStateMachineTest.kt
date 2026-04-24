@@ -42,7 +42,7 @@ class RunnerStateMachineTest {
 	fun `NoOpTask runs through full lifecycle and reaches COMPLETED`() = runTest(UnconfinedTestDispatcher()) {
 		val bus = EventBus()
 		val instance = TaskInstance(task = NoOpTask(tickBudget = 2), criticality = Criticality.OPTIONAL)
-		val runner = Runner(bus)
+		val runner = Runner(bus, java.util.UUID.randomUUID())
 
 		val finalState = runner.run(instance, main)
 
@@ -75,7 +75,7 @@ class RunnerStateMachineTest {
 			criticality = Criticality.OPTIONAL,
 			retryPolicy = RetryPolicy(maxAttempts = 1)
 		)
-		val runner = Runner(bus)
+		val runner = Runner(bus, java.util.UUID.randomUUID())
 
 		val finalState = runner.run(instance, main)
 		assertEquals(TaskState.FAILED, finalState)

@@ -33,7 +33,7 @@ class NoOpTaskRunTest {
 		}
 
 		val instance = TaskInstance(task = NoOpTask(tickBudget = 1), criticality = Criticality.OPTIONAL)
-		val runner = Runner(bus)
+		val runner = Runner(bus, java.util.UUID.randomUUID())
 
 		runner.run(instance, main)
 		subscription.join()
@@ -55,7 +55,7 @@ class NoOpTaskRunTest {
 	fun `NoOpTask terminates in COMPLETED with one method pick per attempt`() = runTest(UnconfinedTestDispatcher()) {
 		val bus = EventBus()
 		val instance = TaskInstance(task = NoOpTask(tickBudget = 5), criticality = Criticality.OPTIONAL)
-		val runner = Runner(bus)
+		val runner = Runner(bus, java.util.UUID.randomUUID())
 
 		val finalState = runner.run(instance, main)
 

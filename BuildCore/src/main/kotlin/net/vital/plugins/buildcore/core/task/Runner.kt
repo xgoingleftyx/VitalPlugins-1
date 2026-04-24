@@ -33,7 +33,7 @@ import kotlin.time.Duration.Companion.milliseconds
  */
 class Runner(
 	private val bus: EventBus,
-	private val sessionId: java.util.UUID = java.util.UUID.randomUUID()
+	private val sessionId: java.util.UUID
 ) {
 
 	/**
