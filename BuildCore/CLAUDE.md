@@ -8,12 +8,14 @@ All-inclusive OSRS account builder foundation for the VitalClient platform. See 
 
 ## Status
 
-**Foundation phase — Plans 1 + 2 + 3 complete.**
+**Foundation phase — Plans 1 + 2 + 3 + 4a complete.**
 
 Future plans in `../docs/superpowers/plans/`:
 - ~~Plan 2 — Core Runtime + Task SPI + Restrictions~~ (done)
 - ~~Plan 3 — Logging + Event Bus~~ (done)
-- Plan 4 — Antiban + Input Layer
+- ~~Plan 4a — RNG + Personality + Input Primitives~~ (done)
+- Plan 4b — Precision Mode + 4-tier break system + Safe-Stop integration
+- Plan 4c — ReplayRecorder + ReplayRng + ReplayServices
 - Plan 5 — Action Library (L5 Services)
 - Plan 6 — Confidence / Watchdog / Recovery
 - Plan 7 — Config + Profile System
@@ -49,14 +51,14 @@ Cross-cutting: `core/restrictions/`, `core/antiban/`, `core/events/`, `core/logg
 
 Architecture tests live in `src/test/kotlin/net/vital/plugins/buildcore/arch/`. Each test cites the spec section it enforces. Adding a new rule = adding a new `@Test` in that directory.
 
-Current invariants (Plans 2 + 3):
+Current invariants (Plans 2 + 3 + 4a):
 - `BusEvent` subtypes are data classes or objects (immutability).
 - `MutableSharedFlow` is only imported inside `core/events/`.
 - Every `Method` has exactly one `IRONMAN` path with no gatingRestrictions.
 - `Task` implementations do not expose public `var` properties.
 - `Runner` is only used inside `core.task` package.
 - Profile restrictions: exactly one mule tier per RestrictionSet.
-- Every `BusEvent` subtype has a `PrivacyScrubber` case (exhaustive-when + drift test).
+- Every `BusEvent` subtype has a `PrivacyScrubber` case (exhaustive-when + drift test, 27 subtypes).
 - No free-form `payload`/`json`/`Any` fields on `BusEvent` subtypes.
 - Correlation IDs (`eventId`, `sessionId`, `taskInstanceId`, `moduleId`) on every subtype.
 - `core.logging` cannot import `Runner` internals.
@@ -64,6 +66,12 @@ Current invariants (Plans 2 + 3):
 - `PrivacyScrubber` has no public mutable fields.
 - Log dir paths constructed only in `LogDirLayout` and `LogConfig`.
 - `UncaughtExceptionHandler` uses `tryEmit` only.
+- `vital.api.input.*` imports only in `VitalApi{Mouse,Keyboard,Camera}Backend.kt`.
+- `java.util.Random` only in `JavaUtilRng.kt`; `SecureRandom` only in `SessionRng.kt`.
+- `PersonalityVector` properties are all `val`, count is exactly 16 (schemaVersion + 15 dimensions).
+- `PersonalityGenerator` draw order matches `PersonalityVector` field order.
+- `Mouse`/`Keyboard`/`Camera` objects expose no public `var` state.
+- `Mouse`/`Keyboard`/`Camera` primitive functions are all `suspend fun`.
 
 Plan 3 onward adds many more. Never weaken an architecture test — extend it or add a new one.
 
