@@ -39,12 +39,15 @@ class LayeringTest {
 	 * bus's MutableSharedFlow — only via [EventBus.emit] / [EventBus.tryEmit].
 	 *
 	 * For now we enforce the broader rule: MutableSharedFlow is only used
-	 * inside `core.events`. Tightens further in Plan 3.
+	 * inside `core.events` in production sources. Tightens further in Plan 3.
+	 *
+	 * Test files are excluded — test utilities may import MutableSharedFlow
+	 * to exercise the bus in isolation without violating the production invariant.
 	 */
 	@Test
 	fun `MutableSharedFlow is only used in core-events package`() {
 		Konsist
-			.scopeFromProject()
+			.scopeFromProduction()
 			.files
 			.filter { file ->
 				file.imports.any { imp -> imp.name == "kotlinx.coroutines.flow.MutableSharedFlow" }
