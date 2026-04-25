@@ -57,6 +57,34 @@ class LogDirLayout(val root: Path)
 		return dir
 	}
 
+	/**
+	 * Sibling directory to the logs root — `.../breaks/` (not nested under logs).
+	 * Plan 4b's [net.vital.plugins.buildcore.core.antiban.breaks.BreakConfigStore]
+	 * persists `breaks.json` here.
+	 *
+	 * Plan 4b spec §7.2.
+	 */
+	fun breakConfigDir(): Path
+	{
+		val dir = root.resolveSibling("breaks")
+		Files.createDirectories(dir)
+		return dir
+	}
+
+	/**
+	 * Sibling directory to the logs root — `.../exports/`. Created lazily by
+	 * [net.vital.plugins.buildcore.core.logging.ExportBundle] when the user
+	 * runs an export. Local raw logs stay full-fidelity in [sessionDir].
+	 *
+	 * Plan 4b spec §7.2.
+	 */
+	fun exportDir(): Path
+	{
+		val dir = root.resolveSibling("exports")
+		Files.createDirectories(dir)
+		return dir
+	}
+
 	private fun deleteRecursively(path: Path)
 	{
 		if (Files.isDirectory(path))
