@@ -36,12 +36,14 @@ object PrecisionGate
 	/** Wired by [net.vital.plugins.buildcore.core.antiban.breaks.BreakScheduler] at install. */
 	@Volatile var preemptHook: (() -> Unit)? = null
 
+	@PublishedApi
 	internal fun markEnterScope(mode: InputMode)
 	{
 		scopeDepth.set(scopeDepth.get() + 1)
 		scopeMode.set(mode)
 	}
 
+	@PublishedApi
 	internal fun markExitScope()
 	{
 		val d = scopeDepth.get() - 1
