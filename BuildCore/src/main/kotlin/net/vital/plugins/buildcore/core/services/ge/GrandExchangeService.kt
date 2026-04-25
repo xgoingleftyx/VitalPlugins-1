@@ -1,5 +1,6 @@
 package net.vital.plugins.buildcore.core.services.ge
 
+import net.vital.plugins.buildcore.core.confidence.ActionStakes
 import net.vital.plugins.buildcore.core.events.EventBus
 import net.vital.plugins.buildcore.core.services.OperationalRestriction
 import net.vital.plugins.buildcore.core.services.withServiceCall
@@ -12,19 +13,19 @@ object GrandExchangeService
 	@Volatile internal var sessionIdProvider: () -> UUID = { UUID(0, 0) }
 
 	suspend fun open(): Boolean = withServiceCall(bus, sessionIdProvider, "GrandExchangeService", "open",
-		restriction = OperationalRestriction.GRAND_EXCHANGE_DISABLED) { backend.open() }
+		restriction = OperationalRestriction.GRAND_EXCHANGE_DISABLED, stakes = ActionStakes.HIGH) { backend.open() }
 
 	suspend fun close(): Boolean = withServiceCall(bus, sessionIdProvider, "GrandExchangeService", "close",
-		restriction = OperationalRestriction.GRAND_EXCHANGE_DISABLED) { backend.close() }
+		restriction = OperationalRestriction.GRAND_EXCHANGE_DISABLED, stakes = ActionStakes.HIGH) { backend.close() }
 
 	suspend fun submitBuy(itemId: Int, qty: Int, pricePerEach: Int): Boolean = withServiceCall(bus, sessionIdProvider, "GrandExchangeService", "submitBuy",
-		restriction = OperationalRestriction.GRAND_EXCHANGE_DISABLED) { backend.submitBuy(itemId, qty, pricePerEach) }
+		restriction = OperationalRestriction.GRAND_EXCHANGE_DISABLED, stakes = ActionStakes.HIGH) { backend.submitBuy(itemId, qty, pricePerEach) }
 
 	suspend fun submitSell(slot: Int, pricePerEach: Int): Boolean = withServiceCall(bus, sessionIdProvider, "GrandExchangeService", "submitSell",
-		restriction = OperationalRestriction.GRAND_EXCHANGE_DISABLED) { backend.submitSell(slot, pricePerEach) }
+		restriction = OperationalRestriction.GRAND_EXCHANGE_DISABLED, stakes = ActionStakes.HIGH) { backend.submitSell(slot, pricePerEach) }
 
 	suspend fun collectAll(): Boolean = withServiceCall(bus, sessionIdProvider, "GrandExchangeService", "collectAll",
-		restriction = OperationalRestriction.GRAND_EXCHANGE_DISABLED) { backend.collectAll() }
+		restriction = OperationalRestriction.GRAND_EXCHANGE_DISABLED, stakes = ActionStakes.HIGH) { backend.collectAll() }
 
 	internal fun resetForTests()
 	{

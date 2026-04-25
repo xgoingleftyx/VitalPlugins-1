@@ -1,5 +1,6 @@
 package net.vital.plugins.buildcore.core.services.login
 
+import net.vital.plugins.buildcore.core.confidence.ActionStakes
 import net.vital.plugins.buildcore.core.events.EventBus
 import net.vital.plugins.buildcore.core.services.OperationalRestriction
 import net.vital.plugins.buildcore.core.services.withServiceCall
@@ -12,10 +13,10 @@ object LoginService
 	@Volatile internal var sessionIdProvider: () -> UUID = { UUID(0, 0) }
 
 	suspend fun login(): Boolean = withServiceCall(bus, sessionIdProvider, "LoginService", "login",
-		restriction = OperationalRestriction.LOGIN_DISABLED) { backend.login() }
+		restriction = OperationalRestriction.LOGIN_DISABLED, stakes = ActionStakes.HIGH) { backend.login() }
 
 	suspend fun logout(): Boolean = withServiceCall(bus, sessionIdProvider, "LoginService", "logout",
-		restriction = OperationalRestriction.LOGIN_DISABLED) { backend.logout() }
+		restriction = OperationalRestriction.LOGIN_DISABLED, stakes = ActionStakes.HIGH) { backend.logout() }
 
 	internal fun resetForTests()
 	{

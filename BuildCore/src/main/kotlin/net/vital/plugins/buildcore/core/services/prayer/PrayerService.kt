@@ -1,5 +1,6 @@
 package net.vital.plugins.buildcore.core.services.prayer
 
+import net.vital.plugins.buildcore.core.confidence.ActionStakes
 import net.vital.plugins.buildcore.core.events.EventBus
 import net.vital.plugins.buildcore.core.services.withServiceCall
 import java.util.UUID
@@ -10,9 +11,11 @@ object PrayerService
 	@Volatile internal var bus: EventBus? = null
 	@Volatile internal var sessionIdProvider: () -> UUID = { UUID(0, 0) }
 
-	suspend fun toggle(prayer: vital.api.ui.Prayer): Boolean = withServiceCall(bus, sessionIdProvider, "PrayerService", "toggle") { backend.toggle(prayer) }
+	suspend fun toggle(prayer: vital.api.ui.Prayer): Boolean = withServiceCall(bus, sessionIdProvider, "PrayerService", "toggle",
+		stakes = ActionStakes.MEDIUM) { backend.toggle(prayer) }
 
-	suspend fun flick(prayer: vital.api.ui.Prayer): Boolean = withServiceCall(bus, sessionIdProvider, "PrayerService", "flick") { backend.flick(prayer) }
+	suspend fun flick(prayer: vital.api.ui.Prayer): Boolean = withServiceCall(bus, sessionIdProvider, "PrayerService", "flick",
+		stakes = ActionStakes.MEDIUM) { backend.flick(prayer) }
 
 	internal fun resetForTests()
 	{

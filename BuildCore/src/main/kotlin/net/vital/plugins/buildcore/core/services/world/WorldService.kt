@@ -1,5 +1,6 @@
 package net.vital.plugins.buildcore.core.services.world
 
+import net.vital.plugins.buildcore.core.confidence.ActionStakes
 import net.vital.plugins.buildcore.core.events.EventBus
 import net.vital.plugins.buildcore.core.services.OperationalRestriction
 import net.vital.plugins.buildcore.core.services.withServiceCall
@@ -12,7 +13,7 @@ object WorldService
 	@Volatile internal var sessionIdProvider: () -> UUID = { UUID(0, 0) }
 
 	suspend fun hop(targetWorld: Int): Boolean = withServiceCall(bus, sessionIdProvider, "WorldService", "hop",
-		restriction = OperationalRestriction.WORLD_HOP_DISABLED) { backend.hop(targetWorld) }
+		restriction = OperationalRestriction.WORLD_HOP_DISABLED, stakes = ActionStakes.HIGH) { backend.hop(targetWorld) }
 
 	internal fun resetForTests()
 	{
