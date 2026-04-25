@@ -3,6 +3,8 @@ package net.vital.plugins.buildcore.core.services
 import net.vital.plugins.buildcore.core.events.EventBus
 import net.vital.plugins.buildcore.core.services.bank.BankService
 import net.vital.plugins.buildcore.core.services.bank.VitalApiBankBackend
+import net.vital.plugins.buildcore.core.services.equipment.EquipmentService
+import net.vital.plugins.buildcore.core.services.equipment.VitalApiEquipmentBackend
 import net.vital.plugins.buildcore.core.services.inventory.InventoryService
 import net.vital.plugins.buildcore.core.services.inventory.VitalApiInventoryBackend
 import java.util.UUID
@@ -32,6 +34,9 @@ object ServiceBootstrap
 		InventoryService.backend = VitalApiInventoryBackend
 		InventoryService.bus = bus
 		InventoryService.sessionIdProvider = sessionIdProvider
+		EquipmentService.backend = VitalApiEquipmentBackend
+		EquipmentService.bus = bus
+		EquipmentService.sessionIdProvider = sessionIdProvider
 	}
 
 	internal fun resetForTests()
@@ -41,5 +46,6 @@ object ServiceBootstrap
 		ServiceCallContext.resetForTests()
 		BankService.resetForTests()
 		InventoryService.resetForTests()
+		EquipmentService.resetForTests()
 	}
 }
