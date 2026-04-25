@@ -26,10 +26,10 @@ class NoOpTaskRunTest {
 	fun `NoOpTask emits validated started completed events in order`() = runTest(UnconfinedTestDispatcher()) {
 		val bus = EventBus()
 		val received = mutableListOf<BusEvent>()
-		// NoOpTask(tickBudget=1) emits exactly 5 events:
-		// Validated, MethodPicked, PathPicked, Started, Completed
+		// NoOpTask(tickBudget=1) emits exactly 6 events:
+		// Validated, RunnerHeartbeat, MethodPicked, PathPicked, Started, Completed
 		val subscription = launch {
-			bus.events.take(5).toList(received)
+			bus.events.take(6).toList(received)
 		}
 
 		val instance = TaskInstance(task = NoOpTask(tickBudget = 1), criticality = Criticality.OPTIONAL)

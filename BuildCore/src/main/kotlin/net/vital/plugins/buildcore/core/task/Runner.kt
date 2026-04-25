@@ -13,6 +13,7 @@ import net.vital.plugins.buildcore.core.events.TaskStarted
 import net.vital.plugins.buildcore.core.events.TaskValidated
 import net.vital.plugins.buildcore.core.restrictions.RestrictionSet
 import kotlin.time.Duration.Companion.milliseconds
+import java.util.UUID
 
 /**
  * The single-threaded state-machine driver for a task instance.
@@ -33,8 +34,28 @@ import kotlin.time.Duration.Companion.milliseconds
  */
 class Runner(
 	private val bus: EventBus,
-	private val sessionId: java.util.UUID
+	private val sessionId: UUID
 ) {
+
+	@Volatile var lastHeartbeatMs: Long = System.currentTimeMillis()
+		private set
+
+	@Volatile private var lastHeartbeatEventMs: Long = 0L
+	@Volatile private var currentTaskInstanceId: UUID? = null
+
+	private fun heartbeat()
+	{
+		lastHeartbeatMs = System.currentTimeMillis()
+		val tid = currentTaskInstanceId ?: return
+		if (lastHeartbeatMs - lastHeartbeatEventMs >= 1_000L)
+		{
+			bus.tryEmit(net.vital.plugins.buildcore.core.events.RunnerHeartbeat(
+				sessionId = sessionId,
+				taskInstanceId = tid
+			))
+			lastHeartbeatEventMs = lastHeartbeatMs
+		}
+	}
 
 	/**
 	 * Run [instance] through its lifecycle until a terminal state.
@@ -62,6 +83,7 @@ class Runner(
 			taskConfig = taskConfig,
 			methodConfig = methodConfig
 		)
+		currentTaskInstanceId = instance.id
 
 		val validation = instance.task.validate(ctx)
 		bus.emit(
@@ -78,6 +100,7 @@ class Runner(
 		}
 
 		while (instance.attemptNumber < instance.retryPolicy.maxAttempts) {
+			heartbeat()
 			instance.attemptNumber += 1
 
 			// Apply backoff before attempt 2+
@@ -181,6 +204,7 @@ class Runner(
 
 	private suspend fun runLoop(instance: TaskInstance, ctx: TaskContext): LoopResult {
 		while (true) {
+			heartbeat()
 			val stepResult = try {
 				instance.task.step(ctx)
 			} catch (ex: Exception) {
