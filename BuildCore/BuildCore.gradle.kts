@@ -25,6 +25,8 @@ dependencies {
 
 	// VitalAPI — compileOnly because VitalShell's plugin classpath provides it at runtime
 	compileOnly(rootProject.libs.vital.api)
+	// VitalAPI also on testImplementation so tests that take vital.api types as parameters can compile
+	testImplementation(rootProject.libs.vital.api)
 
 	// GUI
 	implementation(rootProject.libs.flatlaf)

@@ -22,7 +22,8 @@ class AntibanArchitectureTest {
 	@Test
 	fun `vital api input imports only in VitalApi backend files`() {
 		val allowedFiles = setOf(
-			"VitalApiMouseBackend", "VitalApiKeyboardBackend", "VitalApiCameraBackend"
+			"VitalApiMouseBackend", "VitalApiKeyboardBackend", "VitalApiCameraBackend",
+			"VitalApiWalkerBackend"
 		)
 		Konsist
 			.scopeFromProject()
