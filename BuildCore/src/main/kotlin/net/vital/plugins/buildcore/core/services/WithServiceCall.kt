@@ -1,5 +1,9 @@
 package net.vital.plugins.buildcore.core.services
 
+import net.vital.plugins.buildcore.core.confidence.ActionStakes
+import net.vital.plugins.buildcore.core.confidence.ConfidenceGate
+import net.vital.plugins.buildcore.core.confidence.ConfidenceTooLow
+import net.vital.plugins.buildcore.core.events.ConfidenceUnderconfidentAction
 import net.vital.plugins.buildcore.core.events.EventBus
 import net.vital.plugins.buildcore.core.events.ServiceCallEnd
 import net.vital.plugins.buildcore.core.events.ServiceCallStart
@@ -15,10 +19,10 @@ internal object ServiceCallContext
 }
 
 /**
- * The canonical wrapper shape for every L5 service action method. Centralises
- * event emission, restriction checking, timing, and outcome classification.
+ * Canonical wrapper for L5 service action methods. Centralises events,
+ * restriction check, confidence gate (Plan 6a), timing, outcome classification.
  *
- * Plan 5a spec §4.4.
+ * Plan 5a spec §4.4 + Plan 6a spec §5.3.
  */
 internal inline fun <T> withServiceCall(
 	bus: EventBus?,
@@ -26,6 +30,7 @@ internal inline fun <T> withServiceCall(
 	serviceName: String,
 	methodName: String,
 	restriction: OperationalRestriction? = null,
+	stakes: ActionStakes = ActionStakes.MEDIUM,
 	block: () -> T
 ): T
 {
@@ -41,14 +46,28 @@ internal inline fun <T> withServiceCall(
 			try { RestrictionGate.check(restriction) }
 			catch (e: RestrictionViolation) { outcome = ServiceOutcome.RESTRICTED; throw e }
 		}
+		try { ConfidenceGate.check(stakes) }
+		catch (e: ConfidenceTooLow)
+		{
+			outcome = ServiceOutcome.UNCONFIDENT
+			bus?.tryEmit(ConfidenceUnderconfidentAction(
+				sessionId = sid,
+				serviceName = serviceName,
+				methodName = methodName,
+				required = e.required,
+				current = e.current
+			))
+			throw e
+		}
 		val result = block()
 		if (result == false || result == null) outcome = ServiceOutcome.FAILURE
 		return result
 	}
 	catch (e: RestrictionViolation) { throw e }
+	catch (e: ConfidenceTooLow) { throw e }
 	catch (e: Throwable)
 	{
-		if (outcome != ServiceOutcome.RESTRICTED) outcome = ServiceOutcome.EXCEPTION
+		if (outcome == ServiceOutcome.SUCCESS) outcome = ServiceOutcome.EXCEPTION
 		throw e
 	}
 	finally
