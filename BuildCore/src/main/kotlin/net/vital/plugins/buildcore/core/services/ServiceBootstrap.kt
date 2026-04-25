@@ -19,6 +19,8 @@ import net.vital.plugins.buildcore.core.services.magic.MagicService
 import net.vital.plugins.buildcore.core.services.magic.VitalApiMagicBackend
 import net.vital.plugins.buildcore.core.services.prayer.PrayerService
 import net.vital.plugins.buildcore.core.services.prayer.VitalApiPrayerBackend
+import net.vital.plugins.buildcore.core.services.interact.InteractService
+import net.vital.plugins.buildcore.core.services.interact.VitalApiInteractBackend
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -67,6 +69,9 @@ object ServiceBootstrap
 		PrayerService.backend = VitalApiPrayerBackend
 		PrayerService.bus = bus
 		PrayerService.sessionIdProvider = sessionIdProvider
+		InteractService.backend = VitalApiInteractBackend
+		InteractService.bus = bus
+		InteractService.sessionIdProvider = sessionIdProvider
 	}
 
 	internal fun resetForTests()
@@ -83,5 +88,6 @@ object ServiceBootstrap
 		CombatService.resetForTests()
 		MagicService.resetForTests()
 		PrayerService.resetForTests()
+		InteractService.resetForTests()
 	}
 }
