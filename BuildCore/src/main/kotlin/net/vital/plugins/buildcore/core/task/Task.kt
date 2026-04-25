@@ -40,6 +40,24 @@ interface Task {
 	 */
 	suspend fun requestEarlyStop(reason: net.vital.plugins.buildcore.core.events.EarlyStopReason) {}
 
+	/**
+	 * Plan 6a: Confidence stub-signal source for "expected entities visible".
+	 * Default null = "no expectation" → ExpectedEntitiesVisible signal returns 1.0.
+	 */
+	fun expectedEntities(ctx: TaskContext): List<net.vital.plugins.buildcore.core.confidence.hints.EntityHint>? = null
+
+	/**
+	 * Plan 6a: Confidence stub-signal source for "position reasonable".
+	 * Default null = "no expectation" → PositionReasonable signal returns 1.0.
+	 */
+	fun expectedArea(ctx: TaskContext): net.vital.plugins.buildcore.core.confidence.hints.AreaHint? = null
+
+	/**
+	 * Plan 6a: Confidence stub-signal source for "inventory delta expected".
+	 * Default null = "no expectation" → InventoryDeltaExpected signal returns 1.0.
+	 */
+	fun expectedInventoryDelta(ctx: TaskContext): net.vital.plugins.buildcore.core.confidence.hints.InventoryDeltaHint? = null
+
 	fun progressSignal(ctx: TaskContext): ProgressFingerprint
 
 	/**
