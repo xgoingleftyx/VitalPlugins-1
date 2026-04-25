@@ -3,6 +3,8 @@ package net.vital.plugins.buildcore.core.services
 import net.vital.plugins.buildcore.core.events.EventBus
 import net.vital.plugins.buildcore.core.services.bank.BankService
 import net.vital.plugins.buildcore.core.services.bank.VitalApiBankBackend
+import net.vital.plugins.buildcore.core.services.inventory.InventoryService
+import net.vital.plugins.buildcore.core.services.inventory.VitalApiInventoryBackend
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -27,6 +29,9 @@ object ServiceBootstrap
 		BankService.backend = VitalApiBankBackend
 		BankService.bus = bus
 		BankService.sessionIdProvider = sessionIdProvider
+		InventoryService.backend = VitalApiInventoryBackend
+		InventoryService.bus = bus
+		InventoryService.sessionIdProvider = sessionIdProvider
 	}
 
 	internal fun resetForTests()
@@ -35,5 +40,6 @@ object ServiceBootstrap
 		RestrictionGate.engine = null
 		ServiceCallContext.resetForTests()
 		BankService.resetForTests()
+		InventoryService.resetForTests()
 	}
 }
