@@ -386,3 +386,148 @@ data class SessionRngSeeded(
 	override val moduleId: String? = null,
 	val seed: Long
 ) : BusEvent
+
+// ─────────────────────────────────────────────────────────────────────
+// Antiban events (Plan 4b spec §8)
+// ─────────────────────────────────────────────────────────────────────
+
+enum class BreakTier { MICRO, NORMAL, BEDTIME, BANKING }
+enum class EarlyStopReason { BEDTIME, USER, ORCHESTRATOR }
+enum class MisclickKind { PIXEL_JITTER, NEAR_MISS }
+
+data class PrecisionModeEntered(
+	override val eventId: UUID = UUID.randomUUID(),
+	override val timestamp: Instant = Instant.now(),
+	override val sessionId: UUID,
+	override val schemaVersion: Int = 1,
+	override val taskInstanceId: UUID? = null,
+	override val moduleId: String? = null,
+	val scopeId: Long,
+	val mode: InputMode
+) : BusEvent
+
+data class PrecisionModeExited(
+	override val eventId: UUID = UUID.randomUUID(),
+	override val timestamp: Instant = Instant.now(),
+	override val sessionId: UUID,
+	override val schemaVersion: Int = 1,
+	override val taskInstanceId: UUID? = null,
+	override val moduleId: String? = null,
+	val scopeId: Long,
+	val mode: InputMode,
+	val durationMillis: Long
+) : BusEvent
+
+data class BreakScheduled(
+	override val eventId: UUID = UUID.randomUUID(),
+	override val timestamp: Instant = Instant.now(),
+	override val sessionId: UUID,
+	override val schemaVersion: Int = 1,
+	override val taskInstanceId: UUID? = null,
+	override val moduleId: String? = null,
+	val tier: BreakTier,
+	val fireAtEpochMs: Long
+) : BusEvent
+
+data class BreakStarted(
+	override val eventId: UUID = UUID.randomUUID(),
+	override val timestamp: Instant = Instant.now(),
+	override val sessionId: UUID,
+	override val schemaVersion: Int = 1,
+	override val taskInstanceId: UUID? = null,
+	override val moduleId: String? = null,
+	val tier: BreakTier,
+	val plannedDurationMillis: Long
+) : BusEvent
+
+data class BreakEnded(
+	override val eventId: UUID = UUID.randomUUID(),
+	override val timestamp: Instant = Instant.now(),
+	override val sessionId: UUID,
+	override val schemaVersion: Int = 1,
+	override val taskInstanceId: UUID? = null,
+	override val moduleId: String? = null,
+	val tier: BreakTier,
+	val actualDurationMillis: Long
+) : BusEvent
+
+data class BreakDeferred(
+	override val eventId: UUID = UUID.randomUUID(),
+	override val timestamp: Instant = Instant.now(),
+	override val sessionId: UUID,
+	override val schemaVersion: Int = 1,
+	override val taskInstanceId: UUID? = null,
+	override val moduleId: String? = null,
+	val tier: BreakTier,
+	val deferredMillis: Long
+) : BusEvent
+
+data class BreakDropped(
+	override val eventId: UUID = UUID.randomUUID(),
+	override val timestamp: Instant = Instant.now(),
+	override val sessionId: UUID,
+	override val schemaVersion: Int = 1,
+	override val taskInstanceId: UUID? = null,
+	override val moduleId: String? = null,
+	val tier: BreakTier,
+	val deferredMillis: Long
+) : BusEvent
+
+data class BreakRescheduled(
+	override val eventId: UUID = UUID.randomUUID(),
+	override val timestamp: Instant = Instant.now(),
+	override val sessionId: UUID,
+	override val schemaVersion: Int = 1,
+	override val taskInstanceId: UUID? = null,
+	override val moduleId: String? = null,
+	val tier: BreakTier,
+	val newFireAtEpochMs: Long
+) : BusEvent
+
+data class BreakPreempted(
+	override val eventId: UUID = UUID.randomUUID(),
+	override val timestamp: Instant = Instant.now(),
+	override val sessionId: UUID,
+	override val schemaVersion: Int = 1,
+	override val taskInstanceId: UUID? = null,
+	override val moduleId: String? = null,
+	val tier: BreakTier,
+	val remainingMillis: Long
+) : BusEvent
+
+data class EarlyStopRequested(
+	override val eventId: UUID = UUID.randomUUID(),
+	override val timestamp: Instant = Instant.now(),
+	override val sessionId: UUID,
+	override val schemaVersion: Int = 1,
+	override val taskInstanceId: UUID? = null,
+	override val moduleId: String? = null,
+	val reason: EarlyStopReason
+) : BusEvent
+
+data class Misclick(
+	override val eventId: UUID = UUID.randomUUID(),
+	override val timestamp: Instant = Instant.now(),
+	override val sessionId: UUID,
+	override val schemaVersion: Int = 1,
+	override val taskInstanceId: UUID? = null,
+	override val moduleId: String? = null,
+	val kind: MisclickKind,
+	val intendedX: Int,
+	val intendedY: Int,
+	val actualX: Int,
+	val actualY: Int,
+	val corrected: Boolean
+) : BusEvent
+
+data class SemanticMisclick(
+	override val eventId: UUID = UUID.randomUUID(),
+	override val timestamp: Instant = Instant.now(),
+	override val sessionId: UUID,
+	override val schemaVersion: Int = 1,
+	override val taskInstanceId: UUID? = null,
+	override val moduleId: String? = null,
+	val context: String,
+	val intended: String,
+	val actual: String
+) : BusEvent

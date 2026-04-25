@@ -73,6 +73,18 @@ object PrivacyScrubber {
 		is FatigueUpdated      -> event
 		is PersonalityResolved -> event
 		is SessionRngSeeded    -> event
+		is PrecisionModeEntered -> event
+		is PrecisionModeExited  -> event
+		is BreakScheduled       -> event
+		is BreakStarted         -> event
+		is BreakEnded           -> event
+		is BreakDeferred        -> event
+		is BreakDropped         -> event
+		is BreakRescheduled     -> event
+		is BreakPreempted       -> event
+		is EarlyStopRequested   -> event
+		is Misclick             -> event
+		is SemanticMisclick     -> event
 	}
 
 	private fun scrubString(s: String): String = s
