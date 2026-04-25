@@ -32,6 +32,7 @@ object PrecisionGate
 
 	private val scopeDepth = ThreadLocal.withInitial { 0 }
 	private val scopeMode  = ThreadLocal<InputMode?>()
+	@Volatile internal var scopeEnteredAtMs: Long? = null
 
 	/** Wired by [net.vital.plugins.buildcore.core.antiban.breaks.BreakScheduler] at install. */
 	@Volatile var preemptHook: (() -> Unit)? = null
@@ -39,7 +40,9 @@ object PrecisionGate
 	@PublishedApi
 	internal fun markEnterScope(mode: InputMode)
 	{
-		scopeDepth.set(scopeDepth.get() + 1)
+		val prevDepth = scopeDepth.get()
+		if (prevDepth == 0) scopeEnteredAtMs = System.currentTimeMillis()
+		scopeDepth.set(prevDepth + 1)
 		scopeMode.set(mode)
 	}
 
@@ -51,6 +54,7 @@ object PrecisionGate
 		{
 			scopeDepth.set(0)
 			scopeMode.set(null)
+			scopeEnteredAtMs = null
 		}
 		else
 		{
@@ -83,6 +87,7 @@ object PrecisionGate
 	{
 		scopeDepth.set(0)
 		scopeMode.set(null)
+		scopeEnteredAtMs = null
 		preemptHook = null
 	}
 }
