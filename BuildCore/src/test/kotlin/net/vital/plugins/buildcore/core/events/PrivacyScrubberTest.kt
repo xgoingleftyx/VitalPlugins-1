@@ -24,6 +24,11 @@ import net.vital.plugins.buildcore.core.events.SemanticMisclick
 import net.vital.plugins.buildcore.core.events.ServiceCallStart
 import net.vital.plugins.buildcore.core.events.ServiceCallEnd
 import net.vital.plugins.buildcore.core.events.ServiceOutcome
+import net.vital.plugins.buildcore.core.events.ConfidenceUpdated
+import net.vital.plugins.buildcore.core.events.WatchdogTriggered
+import net.vital.plugins.buildcore.core.events.WatchdogKind
+import net.vital.plugins.buildcore.core.events.RunnerHeartbeat
+import net.vital.plugins.buildcore.core.events.ConfidenceUnderconfidentAction
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -131,10 +136,14 @@ class PrivacyScrubberTest {
 			Misclick            (sessionId = sid, kind = MisclickKind.PIXEL_JITTER, intendedX = 100, intendedY = 200, actualX = 101, actualY = 199, corrected = false),
 			SemanticMisclick    (sessionId = sid, context = "useItemOn", intended = "feather", actual = "fishing-rod"),
 			ServiceCallStart(sessionId = sid, serviceName = "BankService", methodName = "open", callId = 1L),
-			ServiceCallEnd  (sessionId = sid, serviceName = "BankService", methodName = "open", callId = 1L, durationMillis = 12L, outcome = ServiceOutcome.SUCCESS)
+			ServiceCallEnd  (sessionId = sid, serviceName = "BankService", methodName = "open", callId = 1L, durationMillis = 12L, outcome = ServiceOutcome.SUCCESS),
+			ConfidenceUpdated(sessionId = sid, score = 0.85, perSignal = mapOf("HP_NORMAL" to 1.0)),
+			WatchdogTriggered(sessionId = sid, kind = WatchdogKind.STALL, detail = "task=foo unchanged 300000ms"),
+			RunnerHeartbeat(sessionId = sid, taskInstanceId = UUID.randomUUID()),
+			ConfidenceUnderconfidentAction(sessionId = sid, serviceName = "BankService", methodName = "open", required = 0.6, current = 0.4)
 		)
-		// Must cover all 41 current subtypes — update this list when Plans 5a/6/8 add new ones.
-		assertEquals(41, samples.size, "update the sample list when a new BusEvent subtype is added")
+		// Must cover all 45 current subtypes — update this list when Plans 5a/6/8 add new ones.
+		assertEquals(45, samples.size, "update the sample list when a new BusEvent subtype is added")
 		samples.forEach { PrivacyScrubber.scrub(it) }  // just assert no throw
 	}
 }
