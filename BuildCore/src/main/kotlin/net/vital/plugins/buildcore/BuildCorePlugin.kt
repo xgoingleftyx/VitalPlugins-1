@@ -6,6 +6,14 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import net.runelite.client.plugins.Plugin
 import net.runelite.client.plugins.PluginDescriptor
+import net.vital.plugins.buildcore.core.confidence.ConfidenceBootstrap
+import net.vital.plugins.buildcore.core.confidence.ConfidenceSubscriber
+import net.vital.plugins.buildcore.core.confidence.watchdog.Watchdog
+import net.vital.plugins.buildcore.core.confidence.watchdog.WatchdogScope
+import net.vital.plugins.buildcore.core.confidence.watchdog.checks.DeadlockCheck
+import net.vital.plugins.buildcore.core.confidence.watchdog.checks.LeakCheck
+import net.vital.plugins.buildcore.core.confidence.watchdog.checks.StallCheck
+import net.vital.plugins.buildcore.core.confidence.watchdog.checks.UncertainCheck
 import net.vital.plugins.buildcore.core.events.EventBus
 import net.vital.plugins.buildcore.core.events.SubscriberRegistry
 import net.vital.plugins.buildcore.core.logging.LocalJsonlWriter
@@ -34,6 +42,8 @@ class BuildCorePlugin : Plugin() {
 	private lateinit var subscriberRegistry: SubscriberRegistry
 	private lateinit var performanceAggregator: PerformanceAggregator
 	private var breakSchedulerJob: Job? = null
+	private lateinit var watchdogScope: WatchdogScope
+	private var watchdogJob: Job? = null
 
 	override fun startUp() {
 		val cfg = LogConfig.load()
@@ -54,6 +64,7 @@ class BuildCorePlugin : Plugin() {
 			.register(LocalSummaryWriter(sessionDir = sessionDir, level = cfg.level, capBytes = cfg.summaryCapBytes))
 			.register(NoOpTelemetrySubscriber { sessionManager.sessionId })
 			.register(NoOpReplaySubscriber  { sessionManager.sessionId })
+			.register(ConfidenceSubscriber  { sessionManager.sessionId })
 		subscriberRegistry.attachAll(eventBus, loggerScope)
 
 		sessionManager.start()
@@ -80,15 +91,37 @@ class BuildCorePlugin : Plugin() {
 			bus = eventBus,
 			sessionIdProvider = { sessionManager.sessionId }
 		)
+
+		ConfidenceBootstrap.install(
+			bus = eventBus,
+			sessionIdProvider = { sessionManager.sessionId }
+			// taskProvider defaults to null; updated when a Runner is alive (deferred)
+		)
+
+		watchdogScope = WatchdogScope()
+		val checks = listOf(
+			StallCheck(taskProvider = { null to null }),
+			UncertainCheck(),
+			DeadlockCheck(heartbeatProvider = { null }),
+			LeakCheck()
+		)
+		val watchdog = Watchdog(
+			bus = eventBus,
+			sessionIdProvider = { sessionManager.sessionId },
+			checks = checks
+		)
+		watchdogJob = watchdogScope.coroutineScope.launch { watchdog.run() }
 	}
 
 	override fun shutDown() {
 		runBlocking {
+			watchdogJob?.cancelAndJoin()
 			breakSchedulerJob?.cancelAndJoin()
 			performanceAggregator.stop()
 			sessionManager.requestStop()
 			subscriberRegistry.drainAll()
 		}
+		watchdogScope.close()
 		loggerScope.close()
 	}
 }
