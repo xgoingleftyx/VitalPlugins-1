@@ -29,6 +29,17 @@ interface Task {
 	fun isComplete(ctx: TaskContext): Boolean
 	fun safeStop(ctx: TaskContext)
 
+	/**
+	 * Called by [net.vital.plugins.buildcore.core.antiban.breaks.BedtimeEscalator]
+	 * when a Bedtime break has been deferred past its hard ceiling. The task
+	 * is responsible for driving itself to a safe stopping state (bank, log
+	 * out) and then surfacing that via [canStopNow]. Default no-op so existing
+	 * tasks compile without change.
+	 *
+	 * Plan 4b spec §5.6.
+	 */
+	suspend fun requestEarlyStop(reason: net.vital.plugins.buildcore.core.events.EarlyStopReason) {}
+
 	fun progressSignal(ctx: TaskContext): ProgressFingerprint
 
 	/**

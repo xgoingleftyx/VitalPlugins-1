@@ -10,7 +10,7 @@ package net.vital.plugins.buildcore.core.task
  *
  * Spec §6 (reference task goal).
  */
-class NoOpTask(
+open class NoOpTask(
 	override val id: TaskId = TaskId("buildcore.noop"),
 	override val displayName: String = "No-op Task",
 	override val version: SemVer = SemVer(1, 0, 0),
