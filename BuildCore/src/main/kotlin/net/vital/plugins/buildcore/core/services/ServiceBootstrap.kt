@@ -15,6 +15,8 @@ import net.vital.plugins.buildcore.core.services.world.VitalApiWorldBackend
 import net.vital.plugins.buildcore.core.services.world.WorldService
 import net.vital.plugins.buildcore.core.services.combat.CombatService
 import net.vital.plugins.buildcore.core.services.combat.VitalApiCombatBackend
+import net.vital.plugins.buildcore.core.services.magic.MagicService
+import net.vital.plugins.buildcore.core.services.magic.VitalApiMagicBackend
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -57,6 +59,9 @@ object ServiceBootstrap
 		CombatService.backend = VitalApiCombatBackend
 		CombatService.bus = bus
 		CombatService.sessionIdProvider = sessionIdProvider
+		MagicService.backend = VitalApiMagicBackend
+		MagicService.bus = bus
+		MagicService.sessionIdProvider = sessionIdProvider
 	}
 
 	internal fun resetForTests()
@@ -71,5 +76,6 @@ object ServiceBootstrap
 		LoginService.resetForTests()
 		WorldService.resetForTests()
 		CombatService.resetForTests()
+		MagicService.resetForTests()
 	}
 }
