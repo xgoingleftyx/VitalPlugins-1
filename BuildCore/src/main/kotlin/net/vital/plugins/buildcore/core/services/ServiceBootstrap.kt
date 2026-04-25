@@ -23,6 +23,8 @@ import net.vital.plugins.buildcore.core.services.interact.InteractService
 import net.vital.plugins.buildcore.core.services.interact.VitalApiInteractBackend
 import net.vital.plugins.buildcore.core.services.dialogue.DialogueService
 import net.vital.plugins.buildcore.core.services.dialogue.VitalApiDialogueBackend
+import net.vital.plugins.buildcore.core.services.chat.ChatService
+import net.vital.plugins.buildcore.core.services.chat.VitalApiChatBackend
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -77,6 +79,9 @@ object ServiceBootstrap
 		DialogueService.backend = VitalApiDialogueBackend
 		DialogueService.bus = bus
 		DialogueService.sessionIdProvider = sessionIdProvider
+		ChatService.backend = VitalApiChatBackend
+		ChatService.bus = bus
+		ChatService.sessionIdProvider = sessionIdProvider
 	}
 
 	internal fun resetForTests()
@@ -95,5 +100,6 @@ object ServiceBootstrap
 		PrayerService.resetForTests()
 		InteractService.resetForTests()
 		DialogueService.resetForTests()
+		ChatService.resetForTests()
 	}
 }
