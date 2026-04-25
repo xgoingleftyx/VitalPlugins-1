@@ -8,18 +8,19 @@ All-inclusive OSRS account builder foundation for the VitalClient platform. See 
 
 ## Status
 
-**Foundation phase — Plans 1 + 2 + 3 + 4a + 4b + 5a complete.**
+**Foundation phase — Plans 1 + 2 + 3 + 4a + 4b + 5a + 6a complete.**
 
 Future plans in `../docs/superpowers/plans/`:
 - ~~Plan 2 — Core Runtime + Task SPI + Restrictions~~ (done)
 - ~~Plan 3 — Logging + Event Bus~~ (done)
 - ~~Plan 4a — RNG + Personality + Input Primitives~~ (done)
 - ~~Plan 4b — Precision Mode + 4-tier break system + Misclick~~ (done)
-- ~~Plan 5a — Service Infrastructure + 14 thin VitalAPI wrappers~~ (done)
+- ~~Plan 5a — Service Infrastructure + 13 thin VitalAPI wrappers~~ (done)
+- ~~Plan 6a — Confidence + ActionStakes Gating + Watchdog~~ (done)
 - Plan 4c — ReplayRecorder + ReplayRng + ReplayServices
 - Plan 5b — Services with logic (FoodPolicy, GearLoadout, StaminaPolicy, TeleportPlanner, HotRulesClient)
 - Plan 5c — Cross-account / safety services (MuleService, WildernessThreatAnalyzer, TradeSafetyFilter, ChatSafetyListener)
-- Plan 6 — Confidence / Watchdog / Recovery
+- Plan 6b — Recovery Pipeline (7 steps, 90s budget)
 - Plan 7 — Config + Profile System
 - Plan 8 — BuildCore-Server (separate backend project)
 - Plan 9 — Licensing + Updates Client
@@ -60,7 +61,7 @@ Current invariants (Plans 2 + 3 + 4a + 4b):
 - `Task` implementations do not expose public `var` properties.
 - `Runner` is only used inside `core.task` package.
 - Profile restrictions: exactly one mule tier per RestrictionSet.
-- Every `BusEvent` subtype has a `PrivacyScrubber` case (exhaustive-when + drift test, 41 subtypes).
+- Every `BusEvent` subtype has a `PrivacyScrubber` case (exhaustive-when + drift test, 45 subtypes).
 - No free-form `payload`/`json`/`Any` fields on `BusEvent` subtypes.
 - Correlation IDs (`eventId`, `sessionId`, `taskInstanceId`, `moduleId`) on every subtype.
 - `core.logging` cannot import `Runner` internals.
@@ -80,6 +81,9 @@ Current invariants (Plans 2 + 3 + 4a + 4b):
 - Every `*Service.kt` is a Kotlin `object` declaring `@Volatile internal var backend` (Plan 5a).
 - Every `*Service.kt` action method body invokes `withServiceCall(...)` (Plan 5a).
 - `*Service.kt` files do NOT import `vital.api.*`; only `VitalApi*Backend.kt` files do (Plan 5a).
+- Every `*Service.kt` action method passes `stakes = ActionStakes.X` to `withServiceCall` (Plan 6a).
+- `vital.api.*` imports only in `VitalApi*Backend.kt` files OR `VitalApiGameStateProvider.kt` (Plan 6a).
+- `PrecisionGate.scopeEnteredAtMs` and `Runner.lastHeartbeatMs` are the only public mutable state added by Plan 6a (read by Watchdog checks).
 
 Plan 3 onward adds many more. Never weaken an architecture test — extend it or add a new one.
 
