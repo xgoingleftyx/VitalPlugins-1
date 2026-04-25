@@ -1,6 +1,8 @@
 package net.vital.plugins.buildcore.core.services
 
 import net.vital.plugins.buildcore.core.events.EventBus
+import net.vital.plugins.buildcore.core.services.bank.BankService
+import net.vital.plugins.buildcore.core.services.bank.VitalApiBankBackend
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -22,7 +24,9 @@ object ServiceBootstrap
 	{
 		if (!installed.compareAndSet(false, true)) return
 		RestrictionGate.engine = restrictionEngine
-		// Service-specific wiring is added in Tasks 6–18.
+		BankService.backend = VitalApiBankBackend
+		BankService.bus = bus
+		BankService.sessionIdProvider = sessionIdProvider
 	}
 
 	internal fun resetForTests()
@@ -30,6 +34,6 @@ object ServiceBootstrap
 		installed.set(false)
 		RestrictionGate.engine = null
 		ServiceCallContext.resetForTests()
-		// Service-specific reset is added in Tasks 6–18.
+		BankService.resetForTests()
 	}
 }
