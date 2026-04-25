@@ -22,6 +22,7 @@ enum class MouseButton { LEFT, RIGHT, MIDDLE }
 @JvmInline
 value class Key(val vk: Int)
 
+/** Reserved for Plan 4b's precision camera API. */
 data class CameraAngle(val rotation: Int, val pitch: Int)
 
 // InputMode is re-declared in core.events.BusEvent for schema stability;

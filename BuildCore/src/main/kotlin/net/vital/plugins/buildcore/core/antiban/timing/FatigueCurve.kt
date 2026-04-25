@@ -29,7 +29,9 @@ class FatigueCurve(
 
 	fun reactionMultiplier(): Double = multiplier(MAX_REACTION_CREEP).also { maybeEmit(it) }
 	fun misclickMultiplier(): Double = multiplier(MAX_MISCLICK_CREEP)
+	/** Plan 4b service layer consumes this via the [FatigueUpdated] event payload. */
 	fun overshootVarianceMultiplier(): Double = multiplier(MAX_OVERSHOOT_VARIANCE_CREEP)
+	/** Plan 4b service layer consumes this via the [FatigueUpdated] event payload. */
 	fun fidgetRateMultiplier(): Double = multiplier(MAX_FIDGET_CREEP)
 
 	private fun multiplier(maxCreep: Double): Double {
