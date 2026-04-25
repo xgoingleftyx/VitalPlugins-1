@@ -11,6 +11,8 @@ import net.vital.plugins.buildcore.core.services.inventory.InventoryService
 import net.vital.plugins.buildcore.core.services.inventory.VitalApiInventoryBackend
 import net.vital.plugins.buildcore.core.services.login.LoginService
 import net.vital.plugins.buildcore.core.services.login.VitalApiLoginBackend
+import net.vital.plugins.buildcore.core.services.world.VitalApiWorldBackend
+import net.vital.plugins.buildcore.core.services.world.WorldService
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -47,6 +49,9 @@ object ServiceBootstrap
 		LoginService.backend = VitalApiLoginBackend
 		LoginService.bus = bus
 		LoginService.sessionIdProvider = sessionIdProvider
+		WorldService.backend = VitalApiWorldBackend
+		WorldService.bus = bus
+		WorldService.sessionIdProvider = sessionIdProvider
 	}
 
 	internal fun resetForTests()
@@ -59,5 +64,6 @@ object ServiceBootstrap
 		EquipmentService.resetForTests()
 		WalkerService.resetForTests()
 		LoginService.resetForTests()
+		WorldService.resetForTests()
 	}
 }
