@@ -1,5 +1,8 @@
 package net.vital.plugins.buildcore
 
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import net.runelite.client.plugins.Plugin
 import net.runelite.client.plugins.PluginDescriptor
@@ -29,6 +32,7 @@ class BuildCorePlugin : Plugin() {
 	private lateinit var sessionManager: SessionManager
 	private lateinit var subscriberRegistry: SubscriberRegistry
 	private lateinit var performanceAggregator: PerformanceAggregator
+	private var breakSchedulerJob: Job? = null
 
 	override fun startUp() {
 		val cfg = LogConfig.load()
@@ -66,10 +70,15 @@ class BuildCorePlugin : Plugin() {
 			sessionIdProvider = { sessionManager.sessionId },
 			layout = layout
 		)
+
+		AntibanBootstrap.breakScheduler?.let { scheduler ->
+			breakSchedulerJob = loggerScope.coroutineScope.launch { scheduler.run() }
+		}
 	}
 
 	override fun shutDown() {
 		runBlocking {
+			breakSchedulerJob?.cancelAndJoin()
 			performanceAggregator.stop()
 			sessionManager.requestStop()
 			subscriberRegistry.drainAll()
