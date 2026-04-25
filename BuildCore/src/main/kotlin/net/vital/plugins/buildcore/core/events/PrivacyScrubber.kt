@@ -83,8 +83,17 @@ object PrivacyScrubber {
 		is BreakRescheduled     -> event
 		is BreakPreempted       -> event
 		is EarlyStopRequested   -> event
-		is Misclick             -> event
-		is SemanticMisclick     -> event
+		is Misclick             -> event.copy(
+			intendedX = roundToGridCell(event.intendedX),
+			intendedY = roundToGridCell(event.intendedY),
+			actualX   = roundToGridCell(event.actualX),
+			actualY   = roundToGridCell(event.actualY)
+		)
+		is SemanticMisclick     -> event.copy(
+			context  = hashShort(event.context),
+			intended = hashShort(event.intended),
+			actual   = hashShort(event.actual)
+		)
 	}
 
 	private fun scrubString(s: String): String = s
@@ -115,4 +124,11 @@ object PrivacyScrubber {
 		rnd.nextBytes(key)
 		return key
 	}
+
+	private const val GRID_CELL_PX = 16
+
+	private fun roundToGridCell(coord: Int): Int =
+		(coord / GRID_CELL_PX) * GRID_CELL_PX
+
+	private fun hashShort(s: String): String = hmacHex(s)
 }

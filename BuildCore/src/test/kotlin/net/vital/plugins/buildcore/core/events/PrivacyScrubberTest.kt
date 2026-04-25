@@ -5,6 +5,22 @@ import net.vital.plugins.buildcore.core.events.InputAction
 import net.vital.plugins.buildcore.core.events.InputKind
 import net.vital.plugins.buildcore.core.events.PersonalityResolved
 import net.vital.plugins.buildcore.core.events.SessionRngSeeded
+import net.vital.plugins.buildcore.core.events.PrecisionModeEntered
+import net.vital.plugins.buildcore.core.events.PrecisionModeExited
+import net.vital.plugins.buildcore.core.events.InputMode
+import net.vital.plugins.buildcore.core.events.BreakScheduled
+import net.vital.plugins.buildcore.core.events.BreakStarted
+import net.vital.plugins.buildcore.core.events.BreakEnded
+import net.vital.plugins.buildcore.core.events.BreakDeferred
+import net.vital.plugins.buildcore.core.events.BreakDropped
+import net.vital.plugins.buildcore.core.events.BreakRescheduled
+import net.vital.plugins.buildcore.core.events.BreakPreempted
+import net.vital.plugins.buildcore.core.events.BreakTier
+import net.vital.plugins.buildcore.core.events.EarlyStopRequested
+import net.vital.plugins.buildcore.core.events.EarlyStopReason
+import net.vital.plugins.buildcore.core.events.Misclick
+import net.vital.plugins.buildcore.core.events.MisclickKind
+import net.vital.plugins.buildcore.core.events.SemanticMisclick
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -98,10 +114,22 @@ class PrivacyScrubberTest {
 				reactionMultiplier = 1.0, misclickMultiplier = 1.0,
 				overshootVarianceMultiplier = 1.0, fidgetRateMultiplier = 1.0),
 			PersonalityResolved(sessionId = sid, usernameHash = "abc123def456", generated = true),
-			SessionRngSeeded(sessionId = sid, seed = 42L)
+			SessionRngSeeded(sessionId = sid, seed = 42L),
+			PrecisionModeEntered(sessionId = sid, scopeId = 1L, mode = InputMode.PRECISION),
+			PrecisionModeExited (sessionId = sid, scopeId = 1L, mode = InputMode.PRECISION, durationMillis = 250L),
+			BreakScheduled      (sessionId = sid, tier = BreakTier.MICRO,    fireAtEpochMs = 1_000L),
+			BreakStarted        (sessionId = sid, tier = BreakTier.NORMAL,   plannedDurationMillis = 60_000L),
+			BreakEnded          (sessionId = sid, tier = BreakTier.NORMAL,   actualDurationMillis = 58_000L),
+			BreakDeferred       (sessionId = sid, tier = BreakTier.NORMAL,   deferredMillis = 5_000L),
+			BreakDropped        (sessionId = sid, tier = BreakTier.MICRO,    deferredMillis = 60_000L),
+			BreakRescheduled    (sessionId = sid, tier = BreakTier.NORMAL,   newFireAtEpochMs = 2_000L),
+			BreakPreempted      (sessionId = sid, tier = BreakTier.MICRO,    remainingMillis = 10_000L),
+			EarlyStopRequested  (sessionId = sid, reason = EarlyStopReason.BEDTIME),
+			Misclick            (sessionId = sid, kind = MisclickKind.PIXEL_JITTER, intendedX = 100, intendedY = 200, actualX = 101, actualY = 199, corrected = false),
+			SemanticMisclick    (sessionId = sid, context = "useItemOn", intended = "feather", actual = "fishing-rod")
 		)
-		// Must cover all 27 current subtypes — update this list when Plans 4b/6/8 add new ones.
-		assertEquals(27, samples.size, "update the sample list when a new BusEvent subtype is added")
+		// Must cover all 39 current subtypes — update this list when Plans 4b/6/8 add new ones.
+		assertEquals(39, samples.size, "update the sample list when a new BusEvent subtype is added")
 		samples.forEach { PrivacyScrubber.scrub(it) }  // just assert no throw
 	}
 }
