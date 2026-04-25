@@ -536,7 +536,7 @@ data class SemanticMisclick(
 // Service call events (Plan 5a spec §4.1)
 // ─────────────────────────────────────────────────────────────────────
 
-enum class ServiceOutcome { SUCCESS, FAILURE, RESTRICTED, EXCEPTION }
+enum class ServiceOutcome { SUCCESS, FAILURE, RESTRICTED, EXCEPTION, UNCONFIDENT }
 
 data class ServiceCallStart(
 	override val eventId: UUID = UUID.randomUUID(),
@@ -562,4 +562,54 @@ data class ServiceCallEnd(
 	val callId: Long,
 	val durationMillis: Long,
 	val outcome: ServiceOutcome
+) : BusEvent
+
+// ─────────────────────────────────────────────────────────────────────
+// Confidence + Watchdog events (Plan 6a spec §7)
+// ─────────────────────────────────────────────────────────────────────
+
+enum class WatchdogKind { STALL, UNCERTAIN, DEADLOCK, LEAK }
+
+data class ConfidenceUpdated(
+	override val eventId: UUID = UUID.randomUUID(),
+	override val timestamp: Instant = Instant.now(),
+	override val sessionId: UUID,
+	override val schemaVersion: Int = 1,
+	override val taskInstanceId: UUID? = null,
+	override val moduleId: String? = null,
+	val score: Double,
+	val perSignal: Map<String, Double>
+) : BusEvent
+
+data class WatchdogTriggered(
+	override val eventId: UUID = UUID.randomUUID(),
+	override val timestamp: Instant = Instant.now(),
+	override val sessionId: UUID,
+	override val schemaVersion: Int = 1,
+	override val taskInstanceId: UUID? = null,
+	override val moduleId: String? = null,
+	val kind: WatchdogKind,
+	val detail: String
+) : BusEvent
+
+data class RunnerHeartbeat(
+	override val eventId: UUID = UUID.randomUUID(),
+	override val timestamp: Instant = Instant.now(),
+	override val sessionId: UUID,
+	override val schemaVersion: Int = 1,
+	override val taskInstanceId: UUID,
+	override val moduleId: String? = null
+) : BusEvent
+
+data class ConfidenceUnderconfidentAction(
+	override val eventId: UUID = UUID.randomUUID(),
+	override val timestamp: Instant = Instant.now(),
+	override val sessionId: UUID,
+	override val schemaVersion: Int = 1,
+	override val taskInstanceId: UUID? = null,
+	override val moduleId: String? = null,
+	val serviceName: String,
+	val methodName: String,
+	val required: Double,
+	val current: Double
 ) : BusEvent

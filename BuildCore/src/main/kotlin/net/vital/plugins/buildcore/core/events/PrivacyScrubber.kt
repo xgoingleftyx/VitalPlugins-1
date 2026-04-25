@@ -110,6 +110,10 @@ object PrivacyScrubber {
 		)
 		is ServiceCallStart -> event
 		is ServiceCallEnd   -> event
+		is ConfidenceUpdated              -> event
+		is WatchdogTriggered              -> event
+		is RunnerHeartbeat                -> event
+		is ConfidenceUnderconfidentAction -> event
 	}
 
 	private fun scrubString(s: String): String = s
