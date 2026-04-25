@@ -6,17 +6,24 @@ import net.vital.plugins.buildcore.core.events.InputMode
 import net.vital.plugins.buildcore.core.task.GraduatedThrottle
 
 /**
- * Samples a pre-action reaction delay in milliseconds as:
+ * Samples a pre-action reaction delay in milliseconds.
  *
+ * NORMAL:
  *   effectiveDelay = personality.nextLogNormal(reactionLogMean, reactionLogStddev)
  *                  × fatigue.reactionMultiplier()
  *                  × throttle.reactionMultiplier()
+ *   Clamped to [1, 5000]ms.
  *
- * Clamped to [1, 5000]ms.
+ * PRECISION / SURVIVAL:
+ *   Uniform sample within [PRECISION_FLOOR_MIN_MS, PRECISION_FLOOR_MAX_MS].
+ *   No fatigue, no throttle, no log-normal variance.
  *
- * Spec §9.2.
+ * Spec §9.2. Plan 4b lifts the NORMAL-only invariant.
  */
-object ReactionDelay {
+object ReactionDelay
+{
+	private const val PRECISION_FLOOR_MIN_MS = 60L
+	private const val PRECISION_FLOOR_MAX_MS = 160L
 
 	fun sample(
 		personality: PersonalityVector,
@@ -24,14 +31,25 @@ object ReactionDelay {
 		throttle: GraduatedThrottle?,
 		rng: SeededRng,
 		mode: InputMode
-	): Long {
-		require(mode == InputMode.NORMAL) {
-			"Plan 4a supports only NORMAL; PRECISION/SURVIVAL land in Plan 4b"
+	): Long
+	{
+		return when (mode)
+		{
+			InputMode.NORMAL ->
+			{
+				val baseMs = rng.nextLogNormal(personality.reactionLogMean, personality.reactionLogStddev)
+				val fatigueMult = fatigue.reactionMultiplier()
+				val throttleMult = throttle?.reactionMultiplier() ?: 1.0
+				val raw = baseMs * fatigueMult * throttleMult
+				raw.coerceIn(1.0, 5000.0).toLong()
+			}
+			InputMode.PRECISION, InputMode.SURVIVAL ->
+			{
+				// Tight floor: uniform within [PRECISION_FLOOR_MIN_MS, PRECISION_FLOOR_MAX_MS).
+				// No fatigue, no throttle, no log-normal variance.
+				val span = (PRECISION_FLOOR_MAX_MS - PRECISION_FLOOR_MIN_MS).toInt()
+				PRECISION_FLOOR_MIN_MS + rng.nextIntInRange(0, span).toLong()
+			}
 		}
-		val baseMs = rng.nextLogNormal(personality.reactionLogMean, personality.reactionLogStddev)
-		val fatigueMult = fatigue.reactionMultiplier()
-		val throttleMult = throttle?.reactionMultiplier() ?: 1.0
-		val raw = baseMs * fatigueMult * throttleMult
-		return raw.coerceIn(1.0, 5000.0).toLong()
 	}
 }

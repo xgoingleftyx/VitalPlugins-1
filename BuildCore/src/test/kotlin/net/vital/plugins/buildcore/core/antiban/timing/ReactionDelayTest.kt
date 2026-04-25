@@ -5,7 +5,6 @@ import net.vital.plugins.buildcore.core.antiban.personality.PersonalityVector
 import net.vital.plugins.buildcore.core.antiban.rng.JavaUtilRng
 import net.vital.plugins.buildcore.core.events.InputMode
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.time.Clock
@@ -41,12 +40,4 @@ class ReactionDelayTest {
 		}
 	}
 
-	@Test
-	fun `PRECISION mode throws — 4b not yet installed`() {
-		val personality = samplePersonality()
-		val fatigue = FatigueCurve(Instant.ofEpochSecond(0), Clock.fixed(Instant.ofEpochSecond(0), java.time.ZoneOffset.UTC))
-		assertThrows(IllegalArgumentException::class.java) {
-			ReactionDelay.sample(personality, fatigue, null, JavaUtilRng(1L), InputMode.PRECISION)
-		}
-	}
 }
