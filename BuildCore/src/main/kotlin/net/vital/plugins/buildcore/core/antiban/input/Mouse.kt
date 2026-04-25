@@ -36,6 +36,7 @@ object Mouse
 
 	suspend fun moveTo(target: Point, mode: InputMode = InputMode.NORMAL)
 	{
+		val profile = net.vital.plugins.buildcore.core.antiban.precision.PrecisionGate.enter(mode)
 		val provider = personalityProvider ?: error("antiban not bootstrapped")
 		val rng = sessionRng ?: error("antiban not bootstrapped")
 		val fatigueCurve = fatigue ?: error("antiban not bootstrapped")
@@ -60,7 +61,7 @@ object Mouse
 			}
 		}
 
-		if (rng.nextBoolean(personality.overshootTendency))
+		if (profile.overshootEnabled && rng.nextBoolean(personality.overshootTendency))
 		{
 			Overshoot.apply(backend.currentPosition(), target, backend, personality, rng)
 		}
@@ -76,6 +77,7 @@ object Mouse
 
 	suspend fun click(button: MouseButton = MouseButton.LEFT, mode: InputMode = InputMode.NORMAL)
 	{
+		net.vital.plugins.buildcore.core.antiban.precision.PrecisionGate.enter(mode)  // gate-only — misclick wired in Task 17
 		val provider = personalityProvider ?: error("antiban not bootstrapped")
 		val rng = sessionRng ?: error("antiban not bootstrapped")
 		val fatigueCurve = fatigue ?: error("antiban not bootstrapped")

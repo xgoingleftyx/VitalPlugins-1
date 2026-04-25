@@ -42,6 +42,7 @@ object Camera {
 	}
 
 	private suspend fun reactionDelay(mode: InputMode) {
+		net.vital.plugins.buildcore.core.antiban.precision.PrecisionGate.enter(mode)
 		val provider = personalityProvider ?: error("antiban not bootstrapped")
 		val rng = sessionRng ?: error("antiban not bootstrapped")
 		val fatigueCurve = fatigue ?: error("antiban not bootstrapped")
