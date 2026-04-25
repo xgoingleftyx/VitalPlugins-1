@@ -8,15 +8,17 @@ All-inclusive OSRS account builder foundation for the VitalClient platform. See 
 
 ## Status
 
-**Foundation phase — Plans 1 + 2 + 3 + 4a + 4b complete.**
+**Foundation phase — Plans 1 + 2 + 3 + 4a + 4b + 5a complete.**
 
 Future plans in `../docs/superpowers/plans/`:
 - ~~Plan 2 — Core Runtime + Task SPI + Restrictions~~ (done)
 - ~~Plan 3 — Logging + Event Bus~~ (done)
 - ~~Plan 4a — RNG + Personality + Input Primitives~~ (done)
 - ~~Plan 4b — Precision Mode + 4-tier break system + Misclick~~ (done)
+- ~~Plan 5a — Service Infrastructure + 14 thin VitalAPI wrappers~~ (done)
 - Plan 4c — ReplayRecorder + ReplayRng + ReplayServices
-- Plan 5 — Action Library (L5 Services)
+- Plan 5b — Services with logic (FoodPolicy, GearLoadout, StaminaPolicy, TeleportPlanner, HotRulesClient)
+- Plan 5c — Cross-account / safety services (MuleService, WildernessThreatAnalyzer, TradeSafetyFilter, ChatSafetyListener)
 - Plan 6 — Confidence / Watchdog / Recovery
 - Plan 7 — Config + Profile System
 - Plan 8 — BuildCore-Server (separate backend project)
@@ -58,7 +60,7 @@ Current invariants (Plans 2 + 3 + 4a + 4b):
 - `Task` implementations do not expose public `var` properties.
 - `Runner` is only used inside `core.task` package.
 - Profile restrictions: exactly one mule tier per RestrictionSet.
-- Every `BusEvent` subtype has a `PrivacyScrubber` case (exhaustive-when + drift test, 39 subtypes).
+- Every `BusEvent` subtype has a `PrivacyScrubber` case (exhaustive-when + drift test, 41 subtypes).
 - No free-form `payload`/`json`/`Any` fields on `BusEvent` subtypes.
 - Correlation IDs (`eventId`, `sessionId`, `taskInstanceId`, `moduleId`) on every subtype.
 - `core.logging` cannot import `Runner` internals.
@@ -75,6 +77,9 @@ Current invariants (Plans 2 + 3 + 4a + 4b):
 - Functions calling `withPrecision`/`withSurvival` must be `@UsesPrecisionInput` (Plan 4b).
 - `PrecisionGate.enter` only called from `Mouse`/`Keyboard`/`Camera`/`AntibanBootstrap` (Plan 4b).
 - `PrivacyScrubber.scrub` runs only in `ExportBundle`; `LocalSummaryWriter` uses `hashAccountIdOnly` (Plan 4b).
+- Every `*Service.kt` is a Kotlin `object` declaring `@Volatile internal var backend` (Plan 5a).
+- Every `*Service.kt` action method body invokes `withServiceCall(...)` (Plan 5a).
+- `*Service.kt` files do NOT import `vital.api.*`; only `VitalApi*Backend.kt` files do (Plan 5a).
 
 Plan 3 onward adds many more. Never weaken an architecture test — extend it or add a new one.
 
