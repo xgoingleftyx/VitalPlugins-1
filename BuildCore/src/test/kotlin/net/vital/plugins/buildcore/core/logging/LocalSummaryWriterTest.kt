@@ -41,7 +41,7 @@ class LocalSummaryWriterTest {
 	}
 
 	@Test
-	fun `scrubs password out of failure detail`(@TempDir tmp: Path) = runBlocking {
+	fun `local log keeps full fidelity (password not scrubbed — scrubbing is export-time only)`(@TempDir tmp: Path) = runBlocking {
 		val bus = EventBus()
 		val scope = LoggerScope()
 		val writer = LocalSummaryWriter(sessionDir = tmp, level = LogLevel.ERROR)
@@ -61,8 +61,10 @@ class LocalSummaryWriterTest {
 		writer.drain()
 		scope.close()
 
+		// Plan 4b §7.3: local log is full-fidelity; full scrubbing happens at export time via ExportBundle.
+		// hashAccountIdOnly only hashes username fields — raw behavioral data (incl. passwords in detail
+		// strings) is preserved locally for debugging.
 		val text = Files.readString(tmp.resolve("summary.log"))
-		assertFalse(text.contains("hunter2"))
-		assertTrue(text.contains("password=«redacted»"))
+		assertTrue(text.contains("hunter2"), "local log must contain raw detail (full-fidelity, not scrubbed)")
 	}
 }

@@ -33,8 +33,11 @@ import java.util.concurrent.CountDownLatch
 
 /**
  * Fast-path subscriber. Writes human-readable lines to `summary.log`
- * in the session's log dir. Events are privacy-scrubbed before
- * writing (see spec §6) and filtered by [level].
+ * in the session's log dir. Events pass through
+ * [net.vital.plugins.buildcore.core.events.PrivacyScrubber.hashAccountIdOnly]
+ * (defense-in-depth: hashes only account-identifying fields) and are
+ * filtered by [level]. Full privacy scrubbing occurs only at export
+ * time via [ExportBundle] (Plan 4b two-tier model, spec §7.3).
  *
  * Summary covers: session lifecycle, task lifecycle, method/path,
  * safe-stop, errors. Events without a human-summary case (e.g.
@@ -80,7 +83,7 @@ class LocalSummaryWriter(
 			bus.events
 				.onStart { subscribed.countDown() }
 				.collect { event ->
-					val scrubbed = PrivacyScrubber.scrub(event)
+					val scrubbed = PrivacyScrubber.hashAccountIdOnly(event)
 					val evLevel = levelOf(scrubbed)
 					if (evLevel.ordinal < level.ordinal) return@collect
 					val line = formatLine(scrubbed, evLevel) ?: return@collect

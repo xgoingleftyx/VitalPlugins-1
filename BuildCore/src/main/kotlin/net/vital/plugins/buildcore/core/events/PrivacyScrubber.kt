@@ -42,6 +42,20 @@ object PrivacyScrubber {
 		hmacKey = seed.toString().toByteArray(Charsets.UTF_8)
 	}
 
+	/**
+	 * Defense-in-depth: hash only the account-identifying fields (username),
+	 * leave behavioral fields untouched. Called by [net.vital.plugins.buildcore.core.logging.LocalSummaryWriter]
+	 * for every event written to the local log. Full scrubbing happens at export
+	 * time (see [net.vital.plugins.buildcore.core.logging.ExportBundle]).
+	 *
+	 * Plan 4b spec §7.3.
+	 */
+	fun hashAccountIdOnly(event: BusEvent): BusEvent = when (event)
+	{
+		is PersonalityResolved -> event   // usernameHash already hashed at construction
+		else -> event                     // no other event currently carries an unhashed username
+	}
+
 	fun scrub(event: BusEvent): BusEvent = when (event) {
 		is SessionStart         -> event
 		is SessionEnd           -> event
