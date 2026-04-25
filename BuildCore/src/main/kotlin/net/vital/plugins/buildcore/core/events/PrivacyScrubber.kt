@@ -108,6 +108,8 @@ object PrivacyScrubber {
 			intended = hashShort(event.intended),
 			actual   = hashShort(event.actual)
 		)
+		is ServiceCallStart -> event
+		is ServiceCallEnd   -> event
 	}
 
 	private fun scrubString(s: String): String = s

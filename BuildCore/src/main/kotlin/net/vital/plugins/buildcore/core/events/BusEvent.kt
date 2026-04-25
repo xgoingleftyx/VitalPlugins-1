@@ -531,3 +531,35 @@ data class SemanticMisclick(
 	val intended: String,
 	val actual: String
 ) : BusEvent
+
+// ─────────────────────────────────────────────────────────────────────
+// Service call events (Plan 5a spec §4.1)
+// ─────────────────────────────────────────────────────────────────────
+
+enum class ServiceOutcome { SUCCESS, FAILURE, RESTRICTED, EXCEPTION }
+
+data class ServiceCallStart(
+	override val eventId: UUID = UUID.randomUUID(),
+	override val timestamp: Instant = Instant.now(),
+	override val sessionId: UUID,
+	override val schemaVersion: Int = 1,
+	override val taskInstanceId: UUID? = null,
+	override val moduleId: String? = null,
+	val serviceName: String,
+	val methodName: String,
+	val callId: Long
+) : BusEvent
+
+data class ServiceCallEnd(
+	override val eventId: UUID = UUID.randomUUID(),
+	override val timestamp: Instant = Instant.now(),
+	override val sessionId: UUID,
+	override val schemaVersion: Int = 1,
+	override val taskInstanceId: UUID? = null,
+	override val moduleId: String? = null,
+	val serviceName: String,
+	val methodName: String,
+	val callId: Long,
+	val durationMillis: Long,
+	val outcome: ServiceOutcome
+) : BusEvent
