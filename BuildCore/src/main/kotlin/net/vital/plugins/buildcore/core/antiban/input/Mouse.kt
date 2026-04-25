@@ -77,7 +77,7 @@ object Mouse
 
 	suspend fun click(button: MouseButton = MouseButton.LEFT, mode: InputMode = InputMode.NORMAL)
 	{
-		net.vital.plugins.buildcore.core.antiban.precision.PrecisionGate.enter(mode)  // gate-only — misclick wired in Task 17
+		net.vital.plugins.buildcore.core.antiban.precision.PrecisionGate.enter(mode)
 		val provider = personalityProvider ?: error("antiban not bootstrapped")
 		val rng = sessionRng ?: error("antiban not bootstrapped")
 		val fatigueCurve = fatigue ?: error("antiban not bootstrapped")
@@ -86,12 +86,39 @@ object Mouse
 		delay(ReactionDelay.sample(personality, fatigueCurve, throttle, rng, mode))
 
 		val pos = backend.currentPosition()
-		backend.click(pos.x, pos.y, button)
+		val intendedX = pos.x
+		val intendedY = pos.y
+
+		if (net.vital.plugins.buildcore.core.antiban.misclick.MisclickPolicy.decide(personality, fatigueCurve, rng, mode))
+		{
+			val kind = net.vital.plugins.buildcore.core.antiban.misclick.MisclickPolicy.pickKind(rng)
+			when (kind)
+			{
+				net.vital.plugins.buildcore.core.events.MisclickKind.PIXEL_JITTER ->
+				{
+					val (dx, dy) = net.vital.plugins.buildcore.core.antiban.misclick.MisclickPolicy.samplePixelJitterOffset(rng)
+					net.vital.plugins.buildcore.core.antiban.misclick.MisclickPolicy.recordPixelJitter(intendedX, intendedY, dx, dy)
+					backend.click(intendedX + dx, intendedY + dy, button)
+				}
+				net.vital.plugins.buildcore.core.events.MisclickKind.NEAR_MISS ->
+				{
+					val (dx, dy) = net.vital.plugins.buildcore.core.antiban.misclick.MisclickPolicy.sampleNearMissOffset(rng)
+					net.vital.plugins.buildcore.core.antiban.misclick.MisclickPolicy.recordNearMiss(intendedX, intendedY, dx, dy)
+					backend.click(intendedX + dx, intendedY + dy, button)
+					delay(ReactionDelay.sample(personality, fatigueCurve, throttle, rng, mode))
+					backend.click(intendedX, intendedY, button)   // corrective click
+				}
+			}
+		}
+		else
+		{
+			backend.click(intendedX, intendedY, button)
+		}
 
 		bus?.tryEmit(InputAction(
 			sessionId = sessionIdProvider(),
 			kind = InputKind.MOUSE_CLICK,
-			targetX = pos.x, targetY = pos.y,
+			targetX = intendedX, targetY = intendedY,
 			durationMillis = 0L,
 			mode = mode
 		))
