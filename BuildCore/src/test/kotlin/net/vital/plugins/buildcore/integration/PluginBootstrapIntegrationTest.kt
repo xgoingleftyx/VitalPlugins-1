@@ -1,6 +1,5 @@
 package net.vital.plugins.buildcore.integration
 
-import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
@@ -73,8 +72,9 @@ class PluginBootstrapIntegrationTest {
 		assertTrue(jsonl.contains("\"type\":\"TaskFailed\""))
 		assertTrue(jsonl.contains("hunter2"), "JSONL keeps raw detail (unscrubbed)")
 		assertTrue(summary.contains("ERROR"))
-		assertFalse(summary.contains("hunter2"), "summary must be scrubbed")
-		assertTrue(summary.contains("password=«redacted»"))
+		// Plan 4b §7.3: local summary is full-fidelity (hashAccountIdOnly only — no password scrub).
+		// Full scrubbing happens at export time via ExportBundle.
+		assertTrue(summary.contains("hunter2"), "local summary must keep raw detail (full-fidelity)")
 		assertTrue(meta.contains("\"state\" : \"ended\"") || meta.contains("\"state\":\"ended\""))
 	}
 }
