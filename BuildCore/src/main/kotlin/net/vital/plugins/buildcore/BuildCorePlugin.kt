@@ -19,6 +19,7 @@ import net.vital.plugins.buildcore.core.logging.PerformanceAggregator
 import net.vital.plugins.buildcore.core.logging.SessionManager
 import net.vital.plugins.buildcore.core.antiban.AntibanBootstrap
 import net.vital.plugins.buildcore.core.logging.UncaughtExceptionHandler
+import net.vital.plugins.buildcore.core.services.ServiceBootstrap
 
 @PluginDescriptor(
 	name = "BuildCore",
@@ -74,6 +75,11 @@ class BuildCorePlugin : Plugin() {
 		AntibanBootstrap.breakScheduler?.let { scheduler ->
 			breakSchedulerJob = loggerScope.coroutineScope.launch { scheduler.run() }
 		}
+
+		ServiceBootstrap.install(
+			bus = eventBus,
+			sessionIdProvider = { sessionManager.sessionId }
+		)
 	}
 
 	override fun shutDown() {

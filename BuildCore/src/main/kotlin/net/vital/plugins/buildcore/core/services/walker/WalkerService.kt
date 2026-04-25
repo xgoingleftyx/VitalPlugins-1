@@ -2,7 +2,6 @@ package net.vital.plugins.buildcore.core.services.walker
 
 import net.vital.plugins.buildcore.core.events.EventBus
 import net.vital.plugins.buildcore.core.services.withServiceCall
-import vital.api.entities.Tile
 import java.util.UUID
 
 object WalkerService
@@ -11,9 +10,9 @@ object WalkerService
 	@Volatile internal var bus: EventBus? = null
 	@Volatile internal var sessionIdProvider: () -> UUID = { UUID(0, 0) }
 
-	suspend fun walkTo(tile: Tile): Boolean = withServiceCall(bus, sessionIdProvider, "WalkerService", "walkTo") { backend.walkTo(tile) }
+	suspend fun walkTo(tile: vital.api.entities.Tile): Boolean = withServiceCall(bus, sessionIdProvider, "WalkerService", "walkTo") { backend.walkTo(tile) }
 
-	suspend fun walkExact(tile: Tile): Boolean = withServiceCall(bus, sessionIdProvider, "WalkerService", "walkExact") { backend.walkExact(tile) }
+	suspend fun walkExact(tile: vital.api.entities.Tile): Boolean = withServiceCall(bus, sessionIdProvider, "WalkerService", "walkExact") { backend.walkExact(tile) }
 
 	suspend fun stop(): Unit = withServiceCall(bus, sessionIdProvider, "WalkerService", "stop") { backend.stop() }
 
